@@ -1,5 +1,6 @@
 // API Helper - All requests go to Backend
-const API_URL = 'http://localhost:3001/api';
+// Use relative path that will be proxied by Vite in development
+const API_URL = '/api';
 
 /**
  * Generic API call function with auto token handling
