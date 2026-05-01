@@ -41,17 +41,23 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
+    console.log('[v0] Attempting login for:', email);
     const result = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
     );
+
+    console.log('[v0] Query result rows:', result.rows.length);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = result.rows[0];
+    console.log('[v0] User found, comparing password...');
     const validPassword = await bcrypt.compare(password, user.password);
+
+    console.log('[v0] Password valid:', validPassword);
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -75,8 +81,8 @@ export const login = async (req, res) => {
 
     res.json({ user: userData, token });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login' });
+    console.error('[v0] Login error:', error.message, error);
+    res.status(500).json({ error: 'Failed to login', details: error.message });
   }
 };
 
