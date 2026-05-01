@@ -13,7 +13,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false } // Allow self-signed certificates for development
+      ssl: process.env.NODE_ENV === 'production' 
+        ? true 
+        : { rejectUnauthorized: false }, // Allow self-signed certificates for development
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
     })
   : new Pool({
       host: process.env.DB_HOST || 'localhost',
