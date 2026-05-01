@@ -1,17 +1,19 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-console.log('[v0] DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
-console.log('[v0] DB_HOST:', process.env.DB_HOST);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Use DATABASE_URL if provided (Supabase), otherwise use individual config
 const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }, // Required for Supabase
+      ssl: { rejectUnauthorized: false } // Allow self-signed certificates for development
     })
   : new Pool({
       host: process.env.DB_HOST || 'localhost',
