@@ -100,8 +100,9 @@ export const Employees = () => {
                   {employee.department}
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-4">
+                  <p>Position: {employee.position || 'N/A'}</p>
                   <p>Email: {employee.email}</p>
-                  <p>Username: {employee.username}</p>
+                  <p>Phone: {employee.phone || 'N/A'}</p>
                 </div>
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex gap-2">
