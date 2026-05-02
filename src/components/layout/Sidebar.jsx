@@ -47,6 +47,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
     const adminItems = [
       { icon: Home, label: t('sidebar.home'), path: '/dashboard' },
       { icon: Package, label: t('sidebar.assets'), path: '/assets' },
+      { icon: Users, label: 'Users', path: '/users' },
       { icon: Users, label: t('sidebar.employees'), path: '/employees' },
       { icon: FileText, label: t('sidebar.assetsReport'), path: '/reports' },
       { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
