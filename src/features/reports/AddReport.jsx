@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Input } from '../../components/common'
-import { createReport, getAllAssets, getAllEmployees, getAssetAssignmentsByUser } from '../../utils/api'
+import { createReport, getAllAssets, getAllEmployees, getAllUsers, getAssetAssignmentsByUser } from '../../utils/api'
 
 export const AddReport = () => {
   const navigate = useNavigate()
@@ -18,7 +18,7 @@ export const AddReport = () => {
     directed_to_id: '',
   })
   const [assets, setAssets] = useState([])
-  const [employees, setEmployees] = useState([])
+  const [recipients, setRecipients] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -27,9 +27,10 @@ export const AddReport = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [assetsData, employeesData] = await Promise.all([
+        const [assetsData, employeesData, usersData] = await Promise.all([
           getAllAssets(),
-          getAllEmployees()
+          getAllEmployees(),
+          getAllUsers()
         ])
         
         let availableAssets = assetsData || []
@@ -46,11 +47,20 @@ export const AddReport = () => {
         }
         // For admin and asset_manager, show all assets (no filtering)
         
+        // Combine employees and users, removing duplicates
+        const allRecipients = [
+          ...(employeesData || []).map(emp => ({ id: emp.id, name: emp.name, department: emp.department, type: 'employee' })),
+          ...(usersData || []).map(usr => ({ id: usr.id, name: usr.name, department: usr.department, type: 'user' }))
+        ]
+        
+        // Remove duplicates based on id
+        const uniqueRecipients = Array.from(new Map(allRecipients.map(item => [item.id, item])).values())
+        
         setAssets(availableAssets)
-        setEmployees(employeesData || [])
+        setRecipients(uniqueRecipients)
       } catch (error) {
         console.error('Error loading data:', error)
-        setError('Failed to load assets and employees')
+        setError('Failed to load assets and recipients')
       } finally {
         setLoading(false)
       }
@@ -183,28 +193,31 @@ export const AddReport = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Directed To
+                  Directed To (Employee or User)
                 </label>
                 <select
                   value={formData.directed_to_id}
                   onChange={(e) => setFormData({...formData, directed_to_id: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed max-h-80"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:border-gray-400 dark:hover:border-gray-500"
                   disabled={submitting}
-                  size={Math.min(employees.length + 1, 8)}
+                  size={Math.min(Math.max(recipients.length + 2, 5), 10)}
                 >
-                  <option value="">Select employee (optional)</option>
-                  {employees && employees.length > 0 ? (
-                    employees.map(emp => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.name} {emp.department ? `(${emp.department})` : ''}
+                  <option value="">-- Select a recipient (optional) --</option>
+                  {recipients && recipients.length > 0 ? (
+                    recipients.map(recipient => (
+                      <option key={`${recipient.type}-${recipient.id}`} value={recipient.id}>
+                        {recipient.name} {recipient.department ? `(${recipient.department} - ${recipient.type === 'user' ? 'User' : 'Employee'})` : `(${recipient.type === 'user' ? 'User' : 'Employee'})`}
                       </option>
                     ))
                   ) : (
-                    <option disabled>No employees available</option>
+                    <option disabled>No recipients available</option>
                   )}
                 </select>
-                {employees.length === 0 && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No employees found</p>
+                {recipients.length === 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">No employees or users found</p>
+                )}
+                {recipients.length > 0 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{recipients.length} recipients available</p>
                 )}
               </div>
             </div>
