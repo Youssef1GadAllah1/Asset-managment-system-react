@@ -18,9 +18,13 @@ export const AddEditEmployee = () => {
     phone: '',
     status: 'active',
     avatar: '👤',
+    role: 'user',
+    createUserAccount: false
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(id ? true : false)
+  const [credentials, setCredentials] = useState(null)
+  const [showCredentials, setShowCredentials] = useState(false)
   const isEditMode = !!id
 
   useEffect(() => {
@@ -59,11 +63,20 @@ export const AddEditEmployee = () => {
       
       if (id) {
         await updateEmployee(id, formData)
+        navigate('/employees')
       } else {
-        await createEmployee(formData)
+        const response = await createEmployee(formData)
+        
+        // If user account was created, show credentials
+        if (response.credentials) {
+          setCredentials(response.credentials)
+          setShowCredentials(true)
+          setLoading(false)
+          return
+        }
+        
+        navigate('/employees')
       }
-      
-      navigate('/employees')
     } catch (error) {
       console.error('Failed to save employee:', error)
       setErrors({ submit: error.message || 'Failed to save employee' })
@@ -78,6 +91,132 @@ export const AddEditEmployee = () => {
       ...prev,
       [name]: value
     }))
+  }
+
+  // Copy to clipboard function
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+  }
+
+  // If credentials are shown, display them instead of the form
+  if (showCredentials && credentials) {
+    return (
+      <Layout>
+        <div className="p-6 max-w-2xl mx-auto">
+          <Card>
+            <div className="text-center space-y-6">
+              <div className="text-green-600 dark:text-green-400 text-5xl">
+                ✓
+              </div>
+              
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Employee Created Successfully!
+              </h2>
+              
+              <p className="text-gray-600 dark:text-gray-400">
+                A new user account has been created. Share these credentials with the employee.
+              </p>
+
+              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-left space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Email
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={credentials.email}
+                      readOnly
+                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(credentials.email)}
+                      className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Username
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={credentials.username}
+                      readOnly
+                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(credentials.username)}
+                      className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Temporary Password
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={credentials.tempPassword}
+                      readOnly
+                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 font-mono"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(credentials.tempPassword)}
+                      className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Role
+                  </label>
+                  <input
+                    type="text"
+                    value={credentials.role}
+                    readOnly
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 capitalize"
+                  />
+                </div>
+              </div>
+
+              <div className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded p-4">
+                <strong>Important:</strong> The employee should log in and change their password immediately. This temporary password expires in 24 hours.
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate('/employees')}
+                  className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition font-medium"
+                >
+                  Back to Employees
+                </button>
+                <button
+                  onClick={() => {
+                    const credentialsText = `Email: ${credentials.email}\nUsername: ${credentials.username}\nTemporary Password: ${credentials.tempPassword}\nRole: ${credentials.role}`
+                    copyToClipboard(credentialsText)
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg transition font-medium"
+                >
+                  Copy All
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -97,49 +236,108 @@ export const AddEditEmployee = () => {
               error={errors.name}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label={t('employees.email')}
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-              />
-              <Input
-                label="Username"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-              />
-            </div>
-
             <Input
-              label={t('employees.department')}
-              name="department"
-              value={formData.department}
+              label={t('employees.email')}
+              name="email"
+              type="email"
+              value={formData.email}
               onChange={handleChange}
-              error={errors.department}
+              error={errors.email}
             />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('employees.role')}
-              </label>
-              <select
-                name="role"
-                value={formData.role}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label={t('employees.department')}
+                name="department"
+                value={formData.department}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
-              >
-                <option value="user">User</option>
-                <option value="asset_manager">Asset Manager</option>
-              </select>
+                error={errors.department}
+              />
+              <Input
+                label="Position"
+                name="position"
+                value={formData.position}
+                onChange={handleChange}
+              />
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Hire Date"
+                name="hire_date"
+                type="date"
+                value={formData.hire_date}
+                onChange={handleChange}
+              />
+              <Input
+                label="Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="on_leave">On Leave</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('employees.role')}
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="user">User</option>
+                  <option value="asset_manager">Asset Manager</option>
+                </select>
+              </div>
+            </div>
+
+            {!isEditMode && (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="createUserAccount"
+                    checked={formData.createUserAccount}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      createUserAccount: e.target.checked
+                    }))}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Create User Account (generate login credentials)
+                  </span>
+                </label>
+                {formData.createUserAccount && (
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    A user account with temporary password will be created automatically. You&apos;ll be able to share the credentials with the employee.
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-3 pt-6">
-              <Button type="submit" className="flex-1">
-                {isEditMode ? 'Update Employee' : 'Create Employee'}
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? 'Creating...' : (isEditMode ? 'Update Employee' : 'Create Employee')}
               </Button>
               <Button
                 type="button"
