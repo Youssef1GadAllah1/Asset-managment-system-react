@@ -1,8 +1,12 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.join(__dirname, '../../.env');
+dotenv.config({ path: envPath });
 
 // Disable certificate verification for development (Supabase uses self-signed certificates)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
