@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Input } from '../../components/common'
-import { createReport, getAllAssets, getAllUsers, getAssetAssignmentsByUser } from '../../utils/api'
+import { createReport, getAllAssets, getAllEmployees, getAssetAssignmentsByUser } from '../../utils/api'
 
 export const AddReport = () => {
   const navigate = useNavigate()
@@ -27,9 +27,9 @@ export const AddReport = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [assetsData, usersData] = await Promise.all([
+        const [assetsData, employeesData] = await Promise.all([
           getAllAssets(),
-          getAllUsers()
+          getAllEmployees()
         ])
         
         let availableAssets = assetsData || []
@@ -47,10 +47,10 @@ export const AddReport = () => {
         // For admin and asset_manager, show all assets (no filtering)
         
         setAssets(availableAssets)
-        setEmployees(usersData || [])
+        setEmployees(employeesData || [])
       } catch (error) {
         console.error('Error loading data:', error)
-        setError('Failed to load assets and users')
+        setError('Failed to load assets and employees')
       } finally {
         setLoading(false)
       }
@@ -188,14 +188,24 @@ export const AddReport = () => {
                 <select
                   value={formData.directed_to_id}
                   onChange={(e) => setFormData({...formData, directed_to_id: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed max-h-80"
                   disabled={submitting}
+                  size={Math.min(employees.length + 1, 8)}
                 >
                   <option value="">Select employee (optional)</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name}</option>
-                  ))}
+                  {employees && employees.length > 0 ? (
+                    employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} {emp.department ? `(${emp.department})` : ''}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No employees available</option>
+                  )}
                 </select>
+                {employees.length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No employees found</p>
+                )}
               </div>
             </div>
 

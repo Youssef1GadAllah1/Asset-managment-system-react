@@ -219,6 +219,23 @@ export const AddEditEmployee = () => {
     )
   }
 
+  if (loading && isEditMode) {
+    return (
+      <Layout>
+        <div className="p-6 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <div className="inline-block">
+                <div className="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin"></div>
+              </div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading employee details...</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="p-6 max-w-2xl mx-auto">
