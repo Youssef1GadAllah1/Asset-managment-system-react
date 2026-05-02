@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input } from '../../components/common'
+import { Card, Button, Input, FileUpload } from '../../components/common'
 import { Save, Upload } from 'lucide-react'
 
 export const Profile = () => {
@@ -80,41 +80,46 @@ export const Profile = () => {
         </h1>
 
         <Card className="mb-6">
-          <div className="flex items-center space-x-6 mb-8">
-            <div className="flex flex-col items-center">
-              {profileImage ? (
-                <img 
-                  src={profileImage} 
-                  alt="Profile" 
-                  className="w-32 h-32 rounded-full object-cover border-4 border-primary-500"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-4xl">
-                  👤
-                </div>
-              )}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 hover:underline"
-              >
-                Change Image
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
+          <div className="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                {profileImage ? (
+                  <img 
+                    src={profileImage} 
+                    alt="Profile" 
+                    className="w-40 h-40 rounded-full object-cover border-4 border-primary-500 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-40 h-40 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center text-6xl shadow-lg">
+                    👤
+                  </div>
+                )}
+              </div>
+              <FileUpload
+                label="Update Profile Picture"
                 accept="image/*"
-                onChange={handleFileInput}
-                className="hidden"
+                maxSize={2 * 1024 * 1024}
+                preview={profileImage}
+                onUpload={async (file) => {
+                  handleImageChange(file)
+                }}
               />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="flex-1">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 {user?.name}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
-              <span className="inline-block mt-2 px-3 py-1 bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100 rounded-full text-sm font-medium">
-                {roleLabels[user?.role]}
-              </span>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{user?.email}</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-block px-3 py-1 bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100 rounded-full text-sm font-medium">
+                  {roleLabels[user?.role]} Role
+                </span>
+                {user?.department && (
+                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 rounded-full text-sm font-medium">
+                    {user?.department}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

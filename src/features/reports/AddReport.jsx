@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input } from '../../components/common'
+import { Card, Button, Input, Select } from '../../components/common'
 import { createReport, getAllAssets, getAllEmployees, getAllUsers, getAssetAssignmentsByUser } from '../../utils/api'
 
 export const AddReport = () => {
@@ -160,26 +160,19 @@ export const AddReport = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Asset
-                {user?.role === 'user' && <span className="text-xs text-gray-500 ml-2">(Your assigned assets)</span>}
-              </label>
-              <select
-                value={formData.asset_id}
-                onChange={(e) => setFormData({...formData, asset_id: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={submitting}
-              >
-                <option value="">Select an asset (optional)</option>
-                {assets.map(asset => (
-                  <option key={asset.id} value={asset.id}>{asset.name}</option>
-                ))}
-              </select>
-              {user?.role === 'user' && assets.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">No assets assigned to you</p>
-              )}
-            </div>
+            <Select
+              label={`Asset ${user?.role === 'user' ? '(Your assigned assets)' : ''}`}
+              value={formData.asset_id}
+              onChange={(e) => setFormData({...formData, asset_id: e.target.value})}
+              badge="Asset Reference"
+              icon="📦"
+              options={assets.map(asset => ({ id: asset.id, label: asset.name }))}
+              disabled={submitting}
+              placeholder="Select an asset (optional)"
+            />
+            {user?.role === 'user' && assets.length === 0 && (
+              <p className="text-sm text-gray-500 mt-2">No assets assigned to you</p>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -191,52 +184,40 @@ export const AddReport = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Directed To (Employee or User)
-                </label>
-                <select
-                  value={formData.directed_to_id}
-                  onChange={(e) => setFormData({...formData, directed_to_id: e.target.value})}
-                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:border-gray-400 dark:hover:border-gray-500"
-                  disabled={submitting}
-                  size={Math.min(Math.max(recipients.length + 2, 5), 10)}
-                >
-                  <option value="">-- Select a recipient (optional) --</option>
-                  {recipients && recipients.length > 0 ? (
-                    recipients.map(recipient => (
-                      <option key={`${recipient.type}-${recipient.id}`} value={recipient.id}>
-                        {recipient.name} {recipient.department ? `(${recipient.department} - ${recipient.type === 'user' ? 'User' : 'Employee'})` : `(${recipient.type === 'user' ? 'User' : 'Employee'})`}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>No recipients available</option>
-                  )}
-                </select>
-                {recipients.length === 0 && (
-                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">No employees or users found</p>
-                )}
-                {recipients.length > 0 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{recipients.length} recipients available</p>
-                )}
-              </div>
+              <Select
+                label="Directed To (Employee or User)"
+                value={formData.directed_to_id}
+                onChange={(e) => setFormData({...formData, directed_to_id: e.target.value})}
+                badge="Recipient"
+                icon="👤"
+                options={recipients.map(recipient => ({ 
+                  id: recipient.id, 
+                  label: `${recipient.name} (${recipient.department || 'N/A'} - ${recipient.type === 'user' ? 'User' : 'Employee'})`
+                }))}
+                disabled={submitting}
+                placeholder="Select a recipient (optional)"
+              />
+              {recipients.length === 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400">No employees or users found</p>
+              )}
+              {recipients.length > 0 && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">{recipients.length} recipients available</p>
+              )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={submitting}
-              >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
+            <Select
+              label="Status"
+              value={formData.status}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              badge="Report Status"
+              icon="📋"
+              options={[
+                { id: 'pending', label: '⏱️ Pending' },
+                { id: 'in_progress', label: '⚙️ In Progress' },
+                { id: 'completed', label: '✓ Completed' }
+              ]}
+              disabled={submitting}
+            />
 
             <div className="flex gap-3 pt-6">
               <Button 

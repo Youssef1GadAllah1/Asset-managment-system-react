@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input } from '../../components/common'
+import { Card, Button, Input, Select } from '../../components/common'
 import { createUser, updateUser, getUserById } from '../../utils/api'
 
 export const AddEditUser = () => {
@@ -310,21 +310,19 @@ export const AddEditUser = () => {
             </div>
 
             {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                User Role
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
-              >
-                <option value="user">User (Basic Access)</option>
-                <option value="asset_manager">Asset Manager (Extended Access)</option>
-                <option value="admin">Administrator (Full Access)</option>
-              </select>
-            </div>
+            <Select
+              label="User Role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              badge="Access Level"
+              icon="🔐"
+              options={[
+                { id: 'user', label: '👤 User (Basic Access)' },
+                { id: 'asset_manager', label: '🔑 Asset Manager (Extended Access)' },
+                { id: 'admin', label: '👑 Administrator (Full Access)' }
+              ]}
+            />
 
             {/* Submit Buttons */}
             <div className="flex gap-3 pt-6">
