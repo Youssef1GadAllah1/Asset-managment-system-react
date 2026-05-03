@@ -43,39 +43,30 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-
               <Route path="/assets" element={<ProtectedRoute><Assets /></ProtectedRoute>} />
               <Route path="/assets/add" element={<ProtectedRoute><AddEditAsset /></ProtectedRoute>} />
               <Route path="/assets/assign" element={<ProtectedRoute><AssignAsset /></ProtectedRoute>} />
               <Route path="/assets/edit/:id" element={<ProtectedRoute><AddEditAsset /></ProtectedRoute>} />
-
               <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
               <Route path="/employees/add" element={<ProtectedRoute><AddEditEmployee /></ProtectedRoute>} />
               <Route path="/employees/edit/:id" element={<ProtectedRoute><AddEditEmployee /></ProtectedRoute>} />
-
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/users/add" element={<ProtectedRoute><AddEditUser /></ProtectedRoute>} />
               <Route path="/users/edit/:id" element={<ProtectedRoute><AddEditUser /></ProtectedRoute>} />
-
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/reports/add" element={<ProtectedRoute><AddReport /></ProtectedRoute>} />
-
               <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
               <Route path="/tasks/add" element={<ProtectedRoute><AddEditTask /></ProtectedRoute>} />
               <Route path="/tasks/edit/:id" element={<ProtectedRoute><AddEditTask /></ProtectedRoute>} />
-
               <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
               <Route path="/inventory/add" element={<ProtectedRoute><AddEditProduct /></ProtectedRoute>} />
               <Route path="/inventory/edit/:id" element={<ProtectedRoute><AddEditProduct /></ProtectedRoute>} />
-
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-
               <Route path="/" element={<Landing />} />
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </ThemeProvider>
