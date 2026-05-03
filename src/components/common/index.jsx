@@ -1,7 +1,8 @@
+import { memo } from 'react'
 export { Select } from './Select'
 export { FileUpload } from './FileUpload'
 
-export const Button = ({ 
+export const Button = memo(({ 
   children, 
   className = '', 
   variant = 'primary',
@@ -37,9 +38,10 @@ export const Button = ({
       {children}
     </button>
   )
-}
+})
+Button.displayName = 'Button'
 
-export const Input = ({ 
+export const Input = memo(({ 
   label, 
   error, 
   className = '',
@@ -63,17 +65,19 @@ export const Input = ({
       )}
     </div>
   )
-}
+})
+Input.displayName = 'Input'
 
-export const Card = ({ children, className = '', ...props }) => {
+export const Card = memo(({ children, className = '', ...props }) => {
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 ${className}`} {...props}>
       {children}
     </div>
   )
-}
+})
+Card.displayName = 'Card'
 
-export const Badge = ({ children, variant = 'default' }) => {
+export const Badge = memo(({ children, variant = 'default' }) => {
   const variants = {
     default: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
     primary: 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100',
@@ -100,9 +104,10 @@ export const Badge = ({ children, variant = 'default' }) => {
       {children}
     </span>
   )
-}
+})
+Badge.displayName = 'Badge'
 
-export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
+export const Modal = memo(({ isOpen, onClose, title, children, size = 'md' }) => {
   if (!isOpen) return null
 
   const sizes = {
@@ -130,9 +135,10 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
       </div>
     </div>
   )
-}
+})
+Modal.displayName = 'Modal'
 
-export const LoadingSkeleton = () => {
+export const LoadingSkeleton = memo(() => {
   return (
     <div className="space-y-4">
       {[...Array(3)].map((_, i) => (
@@ -140,9 +146,10 @@ export const LoadingSkeleton = () => {
       ))}
     </div>
   )
-}
+})
+LoadingSkeleton.displayName = 'LoadingSkeleton'
 
-export const Table = ({ columns, data, onEdit, onDelete }) => {
+export const Table = memo(({ columns, data, onEdit, onDelete }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -171,7 +178,7 @@ export const Table = ({ columns, data, onEdit, onDelete }) => {
           ) : (
             data.map((row, idx) => (
               <tr
-                key={idx}
+                key={row.id ?? idx}
                 className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 {columns.map((col) => (
@@ -200,9 +207,10 @@ export const Table = ({ columns, data, onEdit, onDelete }) => {
       </table>
     </div>
   )
-}
+})
+Table.displayName = 'Table'
 
-export const Toast = ({ message, type = 'info', onClose }) => {
+export const Toast = memo(({ message, type = 'info', onClose }) => {
   const types = {
     success: 'bg-green-50 border-green-500 text-green-800 dark:bg-green-900/20 dark:border-green-700 dark:text-green-200',
     error: 'bg-red-50 border-red-500 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-200',
@@ -223,4 +231,5 @@ export const Toast = ({ message, type = 'info', onClose }) => {
       </div>
     </div>
   )
-}
+})
+Toast.displayName = 'Toast'

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Badge, Input } from '../../components/common'
 import { getAllAssets, deleteAsset, getAssetAssignmentsByAsset } from '../../utils/api'
-import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit, Trash2 } from 'lucide-react'
 
 export const Assets = () => {
   const navigate = useNavigate()
@@ -38,12 +38,12 @@ export const Assets = () => {
     }
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = useCallback((id) => {
     setDeleteId(id)
     setShowDeleteModal(true)
-  }
+  }, [])
 
-  const handleAssetClick = async (asset) => {
+  const handleAssetClick = useCallback(async (asset) => {
     setSelectedAsset(asset)
     setShowAssetModal(true)
     setLoadingAssignments(true)
@@ -56,34 +56,40 @@ export const Assets = () => {
     } finally {
       setLoadingAssignments(false)
     }
-  }
+  }, [])
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     try {
       await deleteAsset(deleteId)
-      setAssets(assets.filter(a => a.id !== deleteId))
+      setAssets(prev => prev.filter(a => a.id !== deleteId))
       setShowDeleteModal(false)
     } catch (error) {
       console.error('Failed to delete asset:', error)
     }
-  }
+  }, [deleteId])
 
-  const filteredAssets = assets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asset.category.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || asset.status === statusFilter
-    return matchesSearch && matchesStatus
-  }).sort((a, b) => {
-    // Put assets with amount > 0 first, then assets with amount = 0
-    if (a.amount > 0 && b.amount === 0) return -1
-    if (a.amount === 0 && b.amount > 0) return 1
-    return 0
-  })
+  const closeAssetModal = useCallback(() => setShowAssetModal(false), [])
+  const closeDeleteModal = useCallback(() => setShowDeleteModal(false), [])
+
+  const filteredAssets = useMemo(() => {
+    const lower = searchTerm.toLowerCase()
+    return assets
+      .filter(asset => {
+        const matchesSearch = asset.name.toLowerCase().includes(lower) ||
+          asset.category.toLowerCase().includes(lower)
+        const matchesStatus = statusFilter === 'all' || asset.status === statusFilter
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        if (a.amount > 0 && b.amount === 0) return -1
+        if (a.amount === 0 && b.amount > 0) return 1
+        return 0
+      })
+  }, [assets, searchTerm, statusFilter])
 
   return (
     <Layout>
       <div className="p-6 max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             {t('assets.title')}
@@ -108,7 +114,6 @@ export const Assets = () => {
           )}
         </div>
 
-        {/* Filters */}
         <Card className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
@@ -135,12 +140,17 @@ export const Assets = () => {
           </div>
         </Card>
 
-        {/* Assets Grid */}
-        {filteredAssets.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : filteredAssets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAssets.map(asset => (
-              <Card 
-                key={asset.id} 
+              <Card
+                key={asset.id}
                 className={`flex flex-col cursor-pointer hover:shadow-lg transition-shadow ${
                   asset.amount === 0 ? 'opacity-50 grayscale' : ''
                 }`}
@@ -166,7 +176,7 @@ export const Assets = () => {
                 <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                   {(user?.role === 'admin' || user?.role === 'asset_manager') && (
                     <Button
-                      onClick={() => navigate(`/assets/edit/${asset.id}`)}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/assets/edit/${asset.id}`) }}
                       variant="outline"
                       size="sm"
                       className="flex-1 flex items-center justify-center space-x-1"
@@ -177,7 +187,7 @@ export const Assets = () => {
                   )}
                   {user?.role === 'admin' && (
                     <Button
-                      onClick={() => handleDelete(asset.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(asset.id) }}
                       variant="danger"
                       size="sm"
                       className="flex-1 flex items-center justify-center space-x-1"
@@ -255,11 +265,8 @@ export const Assets = () => {
                 )}
               </div>
 
-              {/* Assignments Section */}
               <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  Assignments
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Assignments</h3>
                 {loadingAssignments ? (
                   <p className="text-gray-600 dark:text-gray-400">Loading assignments...</p>
                 ) : assignments.length > 0 ? (
@@ -268,12 +275,8 @@ export const Assets = () => {
                       <div key={assignment.id} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">
-                              {assignment.user_name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                              {assignment.role}
-                            </p>
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">{assignment.user_name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{assignment.role}</p>
                           </div>
                           <Badge variant={assignment.status}>{assignment.status}</Badge>
                         </div>
@@ -310,11 +313,7 @@ export const Assets = () => {
               </div>
 
               <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <Button
-                  onClick={() => setShowAssetModal(false)}
-                  variant="secondary"
-                  className="flex-1"
-                >
+                <Button onClick={closeAssetModal} variant="secondary" className="flex-1">
                   {t('common.close')}
                 </Button>
               </div>
@@ -326,25 +325,13 @@ export const Assets = () => {
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-sm w-full">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                Confirm Delete
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {t('common.confirmDelete')}
-              </p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Confirm Delete</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">{t('common.confirmDelete')}</p>
               <div className="flex gap-3">
-                <Button
-                  onClick={() => setShowDeleteModal(false)}
-                  variant="secondary"
-                  className="flex-1"
-                >
+                <Button onClick={closeDeleteModal} variant="secondary" className="flex-1">
                   {t('common.cancel')}
                 </Button>
-                <Button
-                  onClick={confirmDelete}
-                  variant="danger"
-                  className="flex-1"
-                >
+                <Button onClick={confirmDelete} variant="danger" className="flex-1">
                   {t('common.delete')}
                 </Button>
               </div>

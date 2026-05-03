@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useTranslation } from 'react-i18next'
+import { getUnreadNotificationCount } from '../../utils/api'
 import {
   Menu,
   Search,
@@ -20,25 +21,45 @@ export const Navbar = ({ onMenuClick }) => {
   const { i18n, t } = useTranslation()
   const navigate = useNavigate()
   const [showProfile, setShowProfile] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const [profileImage] = useState(
     localStorage.getItem(`userProfileImage_${user?.id || user?.userName}`) || null
   )
 
-  const handleLogout = () => {
+  useEffect(() => {
+    if (!user?.id) return
+    const fetchUnread = async () => {
+      try {
+        const data = await getUnreadNotificationCount(user.id)
+        setUnreadCount(data?.count ?? 0)
+      } catch {
+        // silently ignore
+      }
+    }
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 60000)
+    return () => clearInterval(interval)
+  }, [user?.id])
+
+  const handleLogout = useCallback(() => {
     logout()
     navigate('/login')
-  }
+  }, [logout, navigate])
 
-  const toggleLanguage = () => {
+  const toggleLanguage = useCallback(() => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en'
     i18n.changeLanguage(newLang)
-  }
+  }, [i18n])
+
+  const handleNotificationClick = useCallback(() => {
+    navigate('/notifications')
+    setUnreadCount(0)
+  }, [navigate])
 
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
       <div className="px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
-          {/* Left Section */}
           <div className="flex items-center space-x-4 ltr:space-x-4 rtl:space-x-reverse">
             <button
               onClick={onMenuClick}
@@ -48,13 +69,9 @@ export const Navbar = ({ onMenuClick }) => {
             </button>
           </div>
 
-          {/* Center Search */}
           <div className="hidden md:flex flex-1 ltr:mx-4 rtl:mx-4">
             <div className="w-full relative">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              />
+              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder={t('navbar.search')}
@@ -63,18 +80,19 @@ export const Navbar = ({ onMenuClick }) => {
             </div>
           </div>
 
-          {/* Right Section */}
           <div className="flex items-center space-x-4 ltr:space-x-4 rtl:space-x-reverse">
-            {/* Notification */}
-            <button 
-              onClick={() => navigate('/notifications')}
+            <button
+              onClick={handleNotificationClick}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative text-primary-600"
             >
               <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-accent-500 rounded-full"></span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-accent-500 rounded-full text-white text-xs flex items-center justify-center px-1 font-bold">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
 
-            {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400"
@@ -83,7 +101,6 @@ export const Navbar = ({ onMenuClick }) => {
               <Globe size={20} />
             </button>
 
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400"
@@ -92,18 +109,13 @@ export const Navbar = ({ onMenuClick }) => {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Profile Dropdown */}
             <div className="relative">
               <button
-                onClick={() => setShowProfile(!showProfile)}
+                onClick={() => setShowProfile(prev => !prev)}
                 className="flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
                 {profileImage ? (
-                  <img 
-                    src={profileImage} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
+                  <img src={profileImage} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                 ) : (
                   <span className="text-2xl">👤</span>
                 )}
@@ -115,20 +127,14 @@ export const Navbar = ({ onMenuClick }) => {
               {showProfile && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
                   <button
-                    onClick={() => {
-                      navigate('/profile')
-                      setShowProfile(false)
-                    }}
+                    onClick={() => { navigate('/profile'); setShowProfile(false) }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                   >
                     <User size={18} />
                     <span>{t('common.profile')}</span>
                   </button>
                   <button
-                    onClick={() => {
-                      navigate('/notifications')
-                      setShowProfile(false)
-                    }}
+                    onClick={() => { navigate('/notifications'); setShowProfile(false) }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                   >
                     <Bell size={18} />

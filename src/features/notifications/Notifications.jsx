@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Badge, Button } from '../../components/common'
-import { getNotifications, markNotificationAsRead } from '../../utils/api'
+import { getNotifications, markNotificationAsRead, deleteNotification } from '../../utils/api'
 import { Trash2, Bell } from 'lucide-react'
 
 export const Notifications = () => {
@@ -13,11 +13,10 @@ export const Notifications = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user?.id) return;
-
+    if (!user?.id) return
     const fetchNotifications = async () => {
       try {
-        const data = await getNotifications(user?.id)
+        const data = await getNotifications(user.id)
         setNotifications(data || [])
       } catch (error) {
         console.error('Error fetching notifications:', error)
@@ -28,27 +27,25 @@ export const Notifications = () => {
     fetchNotifications()
   }, [user?.id])
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     try {
-      // Update local state
-      setNotifications(notifications.filter(n => n.id !== id))
-      // Note: Backend deleteNotification would be called if available
+      await deleteNotification(id)
+      setNotifications(prev => prev.filter(n => n.id !== id))
     } catch (error) {
       console.error('Error deleting notification:', error)
     }
-  }
+  }, [])
 
-  const handleMarkAsRead = async (id) => {
+  const handleMarkAsRead = useCallback(async (id) => {
     try {
       await markNotificationAsRead(id)
-      const updated = notifications.map(n =>
-        n.id === id ? { ...n, is_read: true } : n
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       )
-      setNotifications(updated)
     } catch (error) {
       console.error('Error marking notification as read:', error)
     }
-  }
+  }, [])
 
   const typeColors = {
     info: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',

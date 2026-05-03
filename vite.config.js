@@ -15,5 +15,19 @@ export default defineConfig({
         rewrite: (path) => path
       }
     }
+  },
+  build: {
+    target: 'esnext',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['lucide-react'],
+          'i18n-vendor': ['i18next', 'react-i18next'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600,
   }
 })
