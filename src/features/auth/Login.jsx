@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Button, Input, Card } from '../../components/common'
+import { Logo } from '../../components/common/Logo'
 import { Eye, EyeOff } from 'lucide-react'
 
 export const Login = () => {
@@ -33,8 +34,8 @@ export const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-600 mb-2">EVA Cosmetics</h1>
+        <div className="flex flex-col items-center mb-8 gap-3">
+          <Logo size="lg" to={null} />
           <p className="text-gray-600 dark:text-gray-400">{t('login.subtitle')}</p>
         </div>
 
@@ -104,7 +105,7 @@ export const Login = () => {
         </Card>
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
-          © 2026 EVA Cosmetics Group. All rights reserved.
+          © {new Date().getFullYear()} Next-Step · EVA Cosmetics Group
         </p>
       </div>
     </div>

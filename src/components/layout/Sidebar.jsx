@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { Logo } from '../common/Logo'
 import {
   Home,
   Package,
@@ -100,7 +101,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
         <div className="flex flex-col h-screen">
           {/* Header */}
           <div className="flex items-center justify-between p-6">
-            <h2 className="text-xl font-bold text-primary-600">EVA Cosmetics AMS</h2>
+            <Logo size="sm" to="/dashboard" />
             <button
               onClick={onClose}
               className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"

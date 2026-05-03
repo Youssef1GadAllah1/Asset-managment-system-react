@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useEffect } from 'react'
+import { Logo } from '../../components/common/Logo'
 import {
   Package,
   Users,
@@ -100,14 +101,7 @@ export const Landing = () => {
       {/* ── Navbar ── */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
-              <Package size={16} className="text-white" />
-            </div>
-            <span className="font-bold text-lg text-gray-900 dark:text-white">
-              EVA <span className="text-primary-600">Cosmetics</span>
-            </span>
-          </div>
+          <Logo size="md" to="/" />
           <nav className="flex items-center gap-3">
             <Link
               to="/login"
@@ -127,17 +121,23 @@ export const Landing = () => {
 
       {/* ── Hero ── */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-        <span className="inline-block mb-4 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-100 dark:border-primary-800 uppercase tracking-widest">
+        <span className="inline-block mb-6 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-100 dark:border-primary-800 uppercase tracking-widest">
           Asset Management System
         </span>
-        <h1 className="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900 dark:text-white mb-6">
+
+        {/* Big animated logo in hero */}
+        <div className="flex justify-center mb-8">
+          <Logo size="xl" to={null} />
+        </div>
+
+        <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-gray-900 dark:text-white mb-6">
           Everything your team needs,{' '}
           <span className="text-primary-600">in one place.</span>
         </h1>
         <p className="max-w-2xl mx-auto text-lg text-gray-500 dark:text-gray-400 mb-10">
-          EVA Cosmetics Asset Management System is a centralized platform that
-          helps your organization track assets, manage employees, control
-          inventory, and collaborate — all from a single, secure dashboard.
+          Next-Step is a centralized platform built for EVA Cosmetics that helps
+          your organization track assets, manage employees, control inventory,
+          and collaborate — all from a single, secure dashboard.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
@@ -178,11 +178,11 @@ export const Landing = () => {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-              Why we built this
+              Why we built Next-Step
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
               As EVA Cosmetics grew, managing internal operations manually
-              became unsustainable. This platform was built to solve that.
+              became unsustainable. Next-Step was created to solve that.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -240,7 +240,7 @@ export const Landing = () => {
       <section className="bg-primary-600">
         <div className="max-w-6xl mx-auto px-6 py-16 text-center">
           <h2 className="text-3xl font-bold text-white mb-3">
-            Ready to get started?
+            Ready to take the next step?
           </h2>
           <p className="text-primary-100 mb-8 max-w-lg mx-auto">
             Log in with your company account and take control of your assets,
@@ -258,14 +258,7 @@ export const Landing = () => {
       {/* ── Footer ── */}
       <footer className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary-600 flex items-center justify-center">
-              <Package size={12} className="text-white" />
-            </div>
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              EVA Cosmetics — Asset Management System
-            </span>
-          </div>
+          <Logo size="sm" to="/" />
           <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} EVA Cosmetics Group. All rights reserved.
           </p>
