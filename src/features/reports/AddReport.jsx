@@ -90,7 +90,7 @@ export const AddReport = () => {
     setSubmitting(true)
     try {
       const directedToId = formData.directed_to_id ? parseInt(formData.directed_to_id) : null
-      const selectedUser = directedToId ? employees.find(emp => emp.id === directedToId) : null
+      const selectedUser = directedToId ? recipients.find(emp => emp.id === directedToId) : null
       
       const newReport = {
         title: formData.title.trim(),
