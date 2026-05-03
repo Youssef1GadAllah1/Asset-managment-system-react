@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Badge, Input } from '../../components/common'
+import { Card, Button, Badge } from '../../components/common'
 import { getAllAssets, deleteAsset, getAssetAssignmentsByAsset } from '../../utils/api'
 import { Plus, Search, Edit, Trash2 } from 'lucide-react'
 
@@ -68,15 +68,13 @@ export const Assets = () => {
     }
   }, [deleteId])
 
-  const closeAssetModal = useCallback(() => setShowAssetModal(false), [])
-  const closeDeleteModal = useCallback(() => setShowDeleteModal(false), [])
-
   const filteredAssets = useMemo(() => {
     const lower = searchTerm.toLowerCase()
     return assets
       .filter(asset => {
         const matchesSearch = asset.name.toLowerCase().includes(lower) ||
-          asset.category.toLowerCase().includes(lower)
+          asset.category.toLowerCase().includes(lower) ||
+          String(asset.serialNumber || asset.serial_number || '').toLowerCase().includes(lower)
         const matchesStatus = statusFilter === 'all' || asset.status === statusFilter
         return matchesSearch && matchesStatus
       })
@@ -91,22 +89,13 @@ export const Assets = () => {
     <Layout>
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {t('assets.title')}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('assets.title')}</h1>
           {user?.role === 'admin' && (
             <div className="flex gap-3">
-              <Button
-                onClick={() => navigate('/assets/assign')}
-                variant="secondary"
-                className="flex items-center space-x-2"
-              >
+              <Button onClick={() => navigate('/assets/assign')} variant="secondary" className="flex items-center space-x-2">
                 <span>Assign Asset</span>
               </Button>
-              <Button
-                onClick={() => navigate('/assets/add')}
-                className="flex items-center space-x-2"
-              >
+              <Button onClick={() => navigate('/assets/add')} className="flex items-center space-x-2">
                 <Plus size={20} />
                 <span>{t('assets.addAsset')}</span>
               </Button>
@@ -151,27 +140,22 @@ export const Assets = () => {
             {filteredAssets.map(asset => (
               <Card
                 key={asset.id}
-                className={`flex flex-col cursor-pointer hover:shadow-lg transition-shadow ${
-                  asset.amount === 0 ? 'opacity-50 grayscale' : ''
-                }`}
+                className={`flex flex-col cursor-pointer hover:shadow-lg transition-shadow ${asset.amount === 0 ? 'opacity-50 grayscale' : ''}`}
                 onClick={() => handleAssetClick(asset)}
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-4xl">{asset.image}</span>
                   <Badge variant={asset.status}>{asset.status}</Badge>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                  {asset.name}
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">{asset.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   {asset.category} • {asset.type}
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-4 flex-1">
+                  <p>Serial Number: {asset.serialNumber || asset.serial_number || '-'}</p>
                   <p>Location: {asset.location}</p>
                   <p>Price: ${asset.price}</p>
-                  {asset.assignedToName && (
-                    <p>Assigned: {asset.assignedToName}</p>
-                  )}
+                  {asset.assignedToName && <p>Assigned: {asset.assignedToName}</p>}
                 </div>
                 <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                   {(user?.role === 'admin' || user?.role === 'asset_manager') && (
@@ -206,7 +190,6 @@ export const Assets = () => {
           </Card>
         )}
 
-        {/* Asset Details Modal */}
         {showAssetModal && selectedAsset && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -214,12 +197,8 @@ export const Assets = () => {
                 <div className="flex items-center space-x-4">
                   <span className="text-5xl">{selectedAsset.image}</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {selectedAsset.name}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedAsset.category} • {selectedAsset.type}
-                    </p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedAsset.name}</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedAsset.category} • {selectedAsset.type}</p>
                   </div>
                 </div>
                 <Badge variant={selectedAsset.status}>{selectedAsset.status}</Badge>
@@ -233,7 +212,7 @@ export const Assets = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Serial Number</p>
-                    <p className="font-semibold text-gray-900 dark:text-gray-100">{selectedAsset.serialNumber}</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{selectedAsset.serialNumber || selectedAsset.serial_number || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Price</p>
@@ -249,91 +228,38 @@ export const Assets = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Location</p>
                   <p className="font-semibold text-gray-900 dark:text-gray-100">{selectedAsset.location}</p>
                 </div>
-
-                {selectedAsset.description && (
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Description</p>
-                    <p className="text-gray-900 dark:text-gray-100">{selectedAsset.description}</p>
-                  </div>
-                )}
-
-                {selectedAsset.purchaseDate && (
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Purchase Date</p>
-                    <p className="font-semibold text-gray-900 dark:text-gray-100">{new Date(selectedAsset.purchaseDate).toLocaleDateString()}</p>
-                  </div>
-                )}
               </div>
 
-              <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Assignments</h3>
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Assignments</h3>
                 {loadingAssignments ? (
-                  <p className="text-gray-600 dark:text-gray-400">Loading assignments...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Loading assignments...</p>
                 ) : assignments.length > 0 ? (
-                  <div className="space-y-3">
-                    {assignments.map((assignment) => (
-                      <div key={assignment.id} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">{assignment.user_name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{assignment.role}</p>
-                          </div>
-                          <Badge variant={assignment.status}>{assignment.status}</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-gray-600 dark:text-gray-400">Quantity:</span>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">{assignment.quantity} units</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600 dark:text-gray-400">Assigned By:</span>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">{assignment.assigned_by_name}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600 dark:text-gray-400">Assigned Date:</span>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">
-                              {new Date(assignment.assigned_date).toLocaleDateString()}
-                            </p>
-                          </div>
-                          {assignment.return_date && (
-                            <div>
-                              <span className="text-gray-600 dark:text-gray-400">Return Date:</span>
-                              <p className="font-semibold text-gray-900 dark:text-gray-100">
-                                {new Date(assignment.return_date).toLocaleDateString()}
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                  assignments.map((assignment) => (
+                    <div key={assignment.id} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{assignment.user_name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Qty: {assignment.quantity}</p>
                       </div>
-                    ))}
-                  </div>
+                      <Badge variant={assignment.status}>{assignment.status}</Badge>
+                    </div>
+                  ))
                 ) : (
-                  <p className="text-gray-600 dark:text-gray-400">No active assignments</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No assignments yet.</p>
                 )}
-              </div>
-
-              <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <Button onClick={closeAssetModal} variant="secondary" className="flex-1">
-                  {t('common.close')}
-                </Button>
               </div>
             </Card>
           </div>
         )}
 
-        {/* Delete Modal */}
         {showDeleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-sm w-full">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Confirm Delete</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">{t('common.confirmDelete')}</p>
-              <div className="flex gap-3">
-                <Button onClick={closeDeleteModal} variant="secondary" className="flex-1">
-                  {t('common.cancel')}
-                </Button>
-                <Button onClick={confirmDelete} variant="danger" className="flex-1">
-                  {t('common.delete')}
-                </Button>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-md w-full">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">Delete asset?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">This action cannot be undone.</p>
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                <Button variant="danger" onClick={confirmDelete}>Delete</Button>
               </div>
             </Card>
           </div>

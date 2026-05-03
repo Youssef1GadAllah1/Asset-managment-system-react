@@ -13,7 +13,6 @@ export const AddEditAsset = () => {
   const { t } = useTranslation()
   const { user } = useAuth()
 
-  // Redirect non-admin/non-asset_manager users
   if (user && user.role === 'user') {
     return (
       <Layout>
@@ -33,8 +32,10 @@ export const AddEditAsset = () => {
       </Layout>
     )
   }
+
   const [formData, setFormData] = useState({
     name: '',
+    serialNumber: '',
     category: 'Electronics',
     type: '',
     price: '',
@@ -56,9 +57,19 @@ export const AddEditAsset = () => {
       try {
         if (id) {
           const assetData = await getAssetById(id)
-          setFormData(assetData)
-          
-          // Load assignments for this asset
+          setFormData({
+            name: assetData.name || '',
+            serialNumber: assetData.serialNumber || assetData.serial_number || '',
+            category: assetData.category || 'Electronics',
+            type: assetData.type || '',
+            price: assetData.price || '',
+            amount: assetData.amount || 1,
+            location: assetData.location || '',
+            status: assetData.status || 'available',
+            color: assetData.color || '',
+            image: assetData.image || '📦',
+            date: assetData.date ? String(assetData.date).split('T')[0] : new Date().toISOString().split('T')[0],
+          })
           const assignmentsData = await getAssetAssignmentsByAsset(id)
           setAssignments(assignmentsData || [])
         }
@@ -68,20 +79,12 @@ export const AddEditAsset = () => {
         setLoading(false)
       }
     }
-    
+
     loadData()
   }, [id])
   const isEditMode = !!id
 
-  const categories = [
-    'Electronics',
-    'Photography',
-    'Mobile',
-    'Furniture',
-    'Accessories',
-    'Other'
-  ]
-
+  const categories = ['Electronics', 'Photography', 'Mobile', 'Furniture', 'Accessories', 'Other']
   const statuses = [
     { value: 'available', label: 'Available' },
     { value: 'in_use', label: 'In Use' },
@@ -94,6 +97,7 @@ export const AddEditAsset = () => {
     const newErrors = {}
 
     if (!formData.name.trim()) newErrors.name = 'Asset name is required'
+    if (!formData.serialNumber.trim()) newErrors.serialNumber = 'Serial number is required'
     if (!formData.price) newErrors.price = 'Price is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
 
@@ -104,15 +108,11 @@ export const AddEditAsset = () => {
 
     try {
       setLoading(true)
-      
       if (id) {
-        // Update existing asset
         await updateAsset(id, formData)
       } else {
-        // Create new asset
         await createAsset(formData)
       }
-      
       navigate('/assets')
     } catch (error) {
       console.error('Failed to save asset:', error)
@@ -135,7 +135,7 @@ export const AddEditAsset = () => {
 
   const handleDeleteAssignment = async (assignmentId) => {
     if (!window.confirm('Are you sure you want to delete this assignment?')) return
-    
+
     try {
       setUpdatingAssignment(true)
       await deleteAssetAssignment(assignmentId)
@@ -150,14 +150,14 @@ export const AddEditAsset = () => {
 
   const handleUpdateAssignment = async (assignmentId) => {
     if (!editingAssignment || editingAssignment.id !== assignmentId) return
-    
+
     try {
       setUpdatingAssignment(true)
       await updateAssetAssignment(assignmentId, {
         quantity: editingAssignment.quantity,
         return_date: editingAssignment.return_date
       })
-      
+
       const updated = assignments.map(a =>
         a.id === assignmentId ? { ...a, ...editingAssignment } : a
       )
@@ -189,14 +189,22 @@ export const AddEditAsset = () => {
                 error={errors.name}
               />
               <Input
+                label="Serial Number"
+                name="serialNumber"
+                value={formData.serialNumber}
+                onChange={handleChange}
+                error={errors.serialNumber}
+                placeholder="SN-0001"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
                 label={t('assets.type')}
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
                 label={t('assets.category')}
                 name="category"
@@ -206,7 +214,9 @@ export const AddEditAsset = () => {
                 icon="📦"
                 options={categories.map(cat => ({ id: cat, label: cat }))}
               />
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label={t('assets.price')}
                 name="price"
@@ -215,9 +225,6 @@ export const AddEditAsset = () => {
                 onChange={handleChange}
                 error={errors.price}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="Amount"
                 name="amount"
@@ -226,21 +233,15 @@ export const AddEditAsset = () => {
                 value={formData.amount}
                 onChange={handleChange}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label={t('assets.location')}
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
                 error={errors.location}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label={t('assets.color')}
-                name="color"
-                value={formData.color}
-                onChange={handleChange}
               />
               <Select
                 label={t('assets.status')}
@@ -254,15 +255,22 @@ export const AddEditAsset = () => {
               />
             </div>
 
-            <Input
-              label={t('assets.date')}
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label={t('assets.color')}
+                name="color"
+                value={formData.color}
+                onChange={handleChange}
+              />
+              <Input
+                label={t('assets.date')}
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+              />
+            </div>
 
-            {/* Assignments Section */}
             {isEditMode && assignments.length > 0 && (
               <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -272,7 +280,6 @@ export const AddEditAsset = () => {
                   {assignments.map((assignment) => (
                     <div key={assignment.id} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                       {editingAssignment?.id === assignment.id ? (
-                        // Edit mode
                         <div className="space-y-3">
                           <div className="flex items-center justify-between mb-2">
                             <p className="font-semibold text-gray-900 dark:text-gray-100">
@@ -280,7 +287,7 @@ export const AddEditAsset = () => {
                             </p>
                             <Badge variant={assignment.status}>{assignment.status}</Badge>
                           </div>
-                          
+
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -314,76 +321,27 @@ export const AddEditAsset = () => {
                           </div>
 
                           <div className="flex gap-2 pt-2">
-                            <Button
-                              onClick={() => handleUpdateAssignment(assignment.id)}
-                              disabled={updatingAssignment}
-                              variant="primary"
-                              size="sm"
-                              className="flex-1"
-                            >
-                              {updatingAssignment ? 'Saving...' : 'Save'}
+                            <Button onClick={() => handleUpdateAssignment(assignment.id)} disabled={updatingAssignment} variant="primary" size="sm">
+                              Save
                             </Button>
-                            <Button
-                              onClick={() => setEditingAssignment(null)}
-                              disabled={updatingAssignment}
-                              variant="secondary"
-                              size="sm"
-                              className="flex-1"
-                            >
+                            <Button onClick={() => setEditingAssignment(null)} variant="outline" size="sm">
                               Cancel
                             </Button>
                           </div>
                         </div>
                       ) : (
-                        // View mode
                         <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                              {assignment.user_name}
-                            </p>
-                            <div className="grid grid-cols-3 gap-2 text-sm">
-                              <div>
-                                <span className="text-gray-600 dark:text-gray-400">Qty:</span>
-                                <p className="font-medium text-gray-900 dark:text-gray-100">
-                                  {assignment.quantity} units
-                                </p>
-                              </div>
-                              <div>
-                                <span className="text-gray-600 dark:text-gray-400">Assigned:</span>
-                                <p className="font-medium text-gray-900 dark:text-gray-100">
-                                  {new Date(assignment.assigned_date).toLocaleDateString()}
-                                </p>
-                              </div>
-                              {assignment.return_date && (
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">Return:</span>
-                                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                                    {new Date(assignment.return_date).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">{assignment.user_name}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Qty: {assignment.quantity}</p>
                           </div>
                           <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setEditingAssignment({
-                                id: assignment.id,
-                                quantity: assignment.quantity,
-                                return_date: assignment.return_date
-                              })}
-                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteAssignment(assignment.id)}
-                              disabled={updatingAssignment}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <Button onClick={() => setEditingAssignment(assignment)} variant="outline" size="sm">
+                              <Edit2 size={14} />
+                            </Button>
+                            <Button onClick={() => handleDeleteAssignment(assignment.id)} variant="danger" size="sm">
+                              <Trash2 size={14} />
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -393,20 +351,18 @@ export const AddEditAsset = () => {
               </div>
             )}
 
-            <div className="flex gap-3 pt-6">
-              <Button
-                type="submit"
-                className="flex-1"
-              >
-                Update Asset
+            {errors.submit && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
+                {errors.submit}
+              </div>
+            )}
+
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : isEditMode ? 'Update Asset' : 'Create Asset'}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="flex-1"
-                onClick={() => navigate('/assets')}
-              >
-                {t('common.cancel')}
+              <Button type="button" variant="outline" onClick={() => navigate('/assets')}>
+                Cancel
               </Button>
             </div>
           </form>
