@@ -219,6 +219,23 @@ export const AddEditEmployee = () => {
     )
   }
 
+  if (loading && isEditMode) {
+    return (
+      <Layout>
+        <div className="p-6 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <div className="inline-block">
+                <div className="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin"></div>
+              </div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading employee details...</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="p-6 max-w-2xl mx-auto">
@@ -280,32 +297,46 @@ export const AddEditEmployee = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Status
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span>Status</span>
+                    <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">Employee Status</span>
+                  </div>
                 </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 transition-colors hover:border-gray-400 dark:hover:border-gray-500 appearance-none bg-no-repeat bg-right pr-10"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M1 4l5 5 5-5z'/%3E%3C/svg%3E")`,
+                    backgroundPosition: 'right 12px center'
+                  }}
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="on_leave">On Leave</option>
+                  <option value="active">🟢 Active</option>
+                  <option value="inactive">🔴 Inactive</option>
+                  <option value="on_leave">🟡 On Leave</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('employees.role')}
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span>{t('employees.role')}</span>
+                    <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">System Role</span>
+                  </div>
                 </label>
                 <select
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 transition-colors hover:border-gray-400 dark:hover:border-gray-500 appearance-none bg-no-repeat bg-right pr-10"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M1 4l5 5 5-5z'/%3E%3C/svg%3E")`,
+                    backgroundPosition: 'right 12px center'
+                  }}
                 >
-                  <option value="user">User</option>
-                  <option value="asset_manager">Asset Manager</option>
+                  <option value="user">👤 User</option>
+                  <option value="asset_manager">🔑 Asset Manager</option>
                 </select>
               </div>
             </div>

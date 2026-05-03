@@ -1,3 +1,6 @@
+export { Select } from './Select'
+export { FileUpload } from './FileUpload'
+
 export const Button = ({ 
   children, 
   className = '', 
