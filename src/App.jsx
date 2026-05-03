@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
+const Landing = lazy(() => import('./features/landing/Landing').then(m => ({ default: m.Landing })))
 const Login = lazy(() => import('./features/auth/Login').then(m => ({ default: m.Login })))
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })))
 const Assets = lazy(() => import('./features/assets/Assets').then(m => ({ default: m.Assets })))
@@ -71,8 +72,8 @@ function App() {
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
-              <Route path="/" element={<Navigate to="/dashboard" />} />
-              <Route path="*" element={<Navigate to="/dashboard" />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
         </ThemeProvider>
