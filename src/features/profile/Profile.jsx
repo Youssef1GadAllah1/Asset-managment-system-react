@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Input, FileUpload } from '../../components/common'
-import { Save, Lock } from 'lucide-react'
+import { Save, Lock, Upload } from 'lucide-react'
 import { changePassword } from '../../utils/api'
 
 export const Profile = () => {
