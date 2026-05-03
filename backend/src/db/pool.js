@@ -1,21 +1,17 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Disable certificate verification for development (Supabase uses self-signed certificates)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 // Use DATABASE_URL if provided (Supabase), otherwise use individual config
 const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' 
-        ? true 
-        : { rejectUnauthorized: false }, // Allow self-signed certificates for development
+      ssl: { rejectUnauthorized: false }, // Always allow self-signed for Supabase
       connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
     })
