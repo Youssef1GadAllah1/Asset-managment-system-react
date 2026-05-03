@@ -26,8 +26,7 @@ async function sendOtpEmail(to, otp) {
   const transporter = createTransporter();
 
   if (!transporter) {
-    console.log(`[DEV] Password reset OTP for ${to}: ${otp}`);
-    return;
+    throw new Error('Email service is not configured');
   }
 
   await transporter.sendMail({
@@ -74,9 +73,15 @@ export const forgotPassword = async (req, res) => {
 
     const otp = generateOtp();
     otpStore.set(key, { otp, expiresAt: Date.now() + OTP_EXPIRY_MS });
-    await sendOtpEmail(key, otp);
 
-    res.json({ message: 'Code sent.' });
+    try {
+      await sendOtpEmail(key, otp);
+    } catch (emailError) {
+      console.error('Email send error:', emailError);
+      return res.status(500).json({ error: 'Email service is not configured on this project yet.' });
+    }
+
+    res.json({ message: 'Code sent to the email you entered.' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Failed to send reset code.' });
