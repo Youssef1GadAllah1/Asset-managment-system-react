@@ -18,6 +18,7 @@ export const AddEditEmployee = () => {
     phone: '',
     status: 'active',
     avatar: '👤',
+    role: 'user'
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(id ? true : false)
@@ -97,44 +98,78 @@ export const AddEditEmployee = () => {
               error={errors.name}
             />
 
+            <Input
+              label={t('employees.email')}
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label={t('employees.email')}
-                name="email"
-                type="email"
-                value={formData.email}
+                label={t('employees.department')}
+                name="department"
+                value={formData.department}
                 onChange={handleChange}
-                error={errors.email}
+                error={errors.department}
               />
               <Input
-                label="Username"
-                name="username"
-                value={formData.username}
+                label="Position"
+                name="position"
+                value={formData.position}
                 onChange={handleChange}
               />
             </div>
 
-            <Input
-              label={t('employees.department')}
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              error={errors.department}
-            />
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('employees.role')}
-              </label>
-              <select
-                name="role"
-                value={formData.role}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Hire Date"
+                name="hire_date"
+                type="date"
+                value={formData.hire_date}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
-              >
-                <option value="user">User</option>
-                <option value="asset_manager">Asset Manager</option>
-              </select>
+              />
+              <Input
+                label="Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="on_leave">On Leave</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('employees.role')}
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="user">User</option>
+                  <option value="asset_manager">Asset Manager</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-6">
