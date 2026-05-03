@@ -23,6 +23,7 @@ export const AssignAsset = () => {
   const [selectedUsers, setSelectedUsers] = useState([])
   const [quantities, setQuantities] = useState({})
   const [returnDate, setReturnDate] = useState('')
+  const [serialNumber, setSerialNumber] = useState('')
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,22 +48,18 @@ export const AssignAsset = () => {
     const assetId = parseInt(e.target.value)
     const asset = assets.find(a => a.id === assetId)
     setSelectedAsset(asset || null)
+    setSerialNumber(asset?.serialNumber || asset?.serial_number || '')
   }
 
   const handleUserToggle = (userId) => {
     setSelectedUsers(prev => {
       if (prev.includes(userId)) {
         return prev.filter(id => id !== userId)
-      } else {
-        return [...prev, userId]
       }
+      return [...prev, userId]
     })
-    // Initialize quantity for this user
     if (!quantities[userId]) {
-      setQuantities(prev => ({
-        ...prev,
-        [userId]: 1
-      }))
+      setQuantities(prev => ({ ...prev, [userId]: 1 }))
     }
   }
 
@@ -72,35 +69,20 @@ export const AssignAsset = () => {
       setError(`Quantity cannot exceed available amount (${selectedAsset.amount})`)
       return
     }
-    setQuantities(prev => ({
-      ...prev,
-      [userId]: qty > 0 ? qty : 0
-    }))
+    setQuantities(prev => ({ ...prev, [userId]: qty > 0 ? qty : 0 }))
     setError('')
   }
 
-  const getSelectedUserName = (userId) => {
-    return users.find(u => u.id === userId)?.name || 'Unknown'
-  }
-
-  const getTotalQuantity = () => {
-    return selectedUsers.reduce((sum, userId) => sum + (quantities[userId] || 0), 0)
-  }
-
-  const getSortedAssets = () => {
-    // Separate available and exhausted assets
-    const available = assets.filter(a => a.amount > 0)
-    const exhausted = assets.filter(a => a.amount === 0)
-    // Combine with available first
-    return [...available, ...exhausted]
-  }
+  const getSelectedUserName = (userId) => users.find(u => u.id === userId)?.name || 'Unknown'
+  const getTotalQuantity = () => selectedUsers.reduce((sum, userId) => sum + (quantities[userId] || 0), 0)
+  const getSortedAssets = () => [...assets.filter(a => a.amount > 0), ...assets.filter(a => a.amount === 0)]
 
   const handleRemoveUser = (userId) => {
     setSelectedUsers(prev => prev.filter(id => id !== userId))
     setQuantities(prev => {
-      const newQuantities = { ...prev }
-      delete newQuantities[userId]
-      return newQuantities
+      const next = { ...prev }
+      delete next[userId]
+      return next
     })
   }
 
@@ -109,26 +91,13 @@ export const AssignAsset = () => {
     setError('')
     setSuccess('')
 
-    if (!selectedAsset) {
-      setError('Please select an asset')
-      return
-    }
-
-    if (selectedUsers.length === 0) {
-      setError('Please select at least one user')
-      return
-    }
+    if (!selectedAsset) return setError('Please select an asset')
+    if (!serialNumber.trim()) return setError('Serial number is required')
+    if (selectedUsers.length === 0) return setError('Please select at least one user')
 
     const totalQty = getTotalQuantity()
-    if (totalQty === 0) {
-      setError('Please enter quantities for selected users')
-      return
-    }
-
-    if (totalQty > selectedAsset.amount) {
-      setError(`Total quantity (${totalQty}) exceeds available amount (${selectedAsset.amount})`)
-      return
-    }
+    if (totalQty === 0) return setError('Please enter quantities for selected users')
+    if (totalQty > selectedAsset.amount) return setError(`Total quantity (${totalQty}) exceeds available amount (${selectedAsset.amount})`)
 
     setSubmitting(true)
     try {
@@ -138,10 +107,10 @@ export const AssignAsset = () => {
         quantities: selectedUsers.map(userId => quantities[userId] || 1),
         assigned_by_id: user?.id,
         assigned_by_name: user?.name,
-        return_date: returnDate || null
+        return_date: returnDate || null,
+        serial_number: serialNumber.trim()
       }
 
-      console.log('Assigning assets:', assignmentData)
       await assignAssets(assignmentData)
       setSuccess(`Asset assigned successfully to ${selectedUsers.length} user(s)!`)
       setTimeout(() => navigate('/assets'), 2000)
@@ -156,29 +125,15 @@ export const AssignAsset = () => {
   return (
     <Layout>
       <div className="p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">
-          Assign Asset to Users
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Assign Asset to Users</h1>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-200">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-200">
-            {success}
-          </div>
-        )}
+        {error && <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-200">{error}</div>}
+        {success && <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-200">{success}</div>}
 
         <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Asset Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Asset *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Asset *</label>
               <select
                 value={selectedAsset?.id || ''}
                 onChange={handleAssetSelect}
@@ -187,11 +142,7 @@ export const AssignAsset = () => {
               >
                 <option value="">Choose an asset...</option>
                 {getSortedAssets().map(asset => (
-                  <option 
-                    key={asset.id} 
-                    value={asset.id}
-                    disabled={asset.amount === 0}
-                  >
+                  <option key={asset.id} value={asset.id} disabled={asset.amount === 0}>
                     {asset.name} ({asset.amount} available)
                     {asset.amount === 0 && ' - OUT OF STOCK'}
                   </option>
@@ -200,45 +151,38 @@ export const AssignAsset = () => {
             </div>
 
             {selectedAsset && (
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <strong>Selected Asset:</strong> {selectedAsset.name}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <strong>Available Amount:</strong> {selectedAsset.amount}
-                </p>
-                {getTotalQuantity() > 0 && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <strong>Total to Assign:</strong> {getTotalQuantity()} / {selectedAsset.amount}
-                  </p>
-                )}
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Serial Number *</label>
+                  <input
+                    type="text"
+                    value={serialNumber}
+                    onChange={(e) => setSerialNumber(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                    placeholder="Enter unique serial number"
+                  />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Selected Asset:</strong> {selectedAsset.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Available Amount:</strong> {selectedAsset.amount}</p>
+                {getTotalQuantity() > 0 && <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Total to Assign:</strong> {getTotalQuantity()} / {selectedAsset.amount}</p>}
               </div>
             )}
 
-            {/* Return Date */}
             {selectedAsset && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Return Date (Optional)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Return Date (Optional)</label>
                 <input
                   type="date"
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Set the expected return date for the assigned asset
-                </p>
               </div>
             )}
 
-            {/* User Selection */}
             {selectedAsset && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Users to Assign To *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Users to Assign To *</label>
                 <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
                   {users.map(u => (
                     <label key={u.id} className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-600/50 rounded">
@@ -256,19 +200,14 @@ export const AssignAsset = () => {
               </div>
             )}
 
-            {/* Selected Users with Quantities */}
             {selectedUsers.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Assign Quantities *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Quantities *</label>
                 <div className="space-y-3 max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
                   {selectedUsers.map(userId => (
                     <div key={userId} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {getSelectedUserName(userId)}
-                        </p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{getSelectedUserName(userId)}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <input
@@ -295,17 +234,11 @@ export const AssignAsset = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-3 pt-6 border-t dark:border-gray-700">
               <Button type="submit" disabled={submitting || !selectedAsset || selectedUsers.length === 0}>
                 {submitting ? 'Assigning...' : 'Assign Asset'}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => navigate('/assets')}
-                disabled={submitting}
-              >
+              <Button type="button" variant="secondary" onClick={() => navigate('/assets')} disabled={submitting}>
                 Cancel
               </Button>
             </div>
@@ -315,5 +248,3 @@ export const AssignAsset = () => {
     </Layout>
   )
 }
-
-export default AssignAsset

@@ -4,17 +4,16 @@ const createDatabase = async () => {
   try {
     console.log('Creating database schema...');
 
-    // Drop existing tables if they exist (for fresh setup)
     await pool.query('DROP TABLE IF EXISTS chat_messages CASCADE');
     await pool.query('DROP TABLE IF EXISTS notifications CASCADE');
     await pool.query('DROP TABLE IF EXISTS tasks CASCADE');
     await pool.query('DROP TABLE IF EXISTS reports CASCADE');
     await pool.query('DROP TABLE IF EXISTS products CASCADE');
+    await pool.query('DROP TABLE IF EXISTS asset_assignments CASCADE');
     await pool.query('DROP TABLE IF EXISTS assets CASCADE');
     await pool.query('DROP TABLE IF EXISTS employees CASCADE');
     await pool.query('DROP TABLE IF EXISTS users CASCADE');
 
-    // Create users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -30,7 +29,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create assets table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS assets (
         id SERIAL PRIMARY KEY,
@@ -44,6 +42,7 @@ const createDatabase = async () => {
         status VARCHAR(50) DEFAULT 'available',
         color VARCHAR(100),
         image VARCHAR(50),
+        serial_number VARCHAR(255) UNIQUE NOT NULL,
         assigned_to_id INTEGER REFERENCES users(id),
         assigned_to_name VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -51,7 +50,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create products (inventory) table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -70,7 +68,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create employees table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS employees (
         id SERIAL PRIMARY KEY,
@@ -87,7 +84,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create reports table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS reports (
         id SERIAL PRIMARY KEY,
@@ -106,7 +102,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create tasks table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
@@ -126,7 +121,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create notifications table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
@@ -140,7 +134,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create chat messages table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
         id SERIAL PRIMARY KEY,
@@ -152,7 +145,6 @@ const createDatabase = async () => {
       )
     `);
 
-    // Create asset assignments table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS asset_assignments (
         id SERIAL PRIMARY KEY,

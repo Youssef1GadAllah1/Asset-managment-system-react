@@ -3,7 +3,7 @@ import pool from '../db/pool.js';
 export const getAssetAssignments = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT aa.*, a.name as asset_name, u.name as user_name 
+      `SELECT aa.*, a.name as asset_name, a.serial_number as serial_number, u.name as user_name 
        FROM asset_assignments aa
        JOIN assets a ON aa.asset_id = a.id
        JOIN users u ON aa.user_id = u.id
@@ -20,7 +20,7 @@ export const getAssetAssignmentsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const result = await pool.query(
-      `SELECT aa.*, a.name as asset_name, a.image, u.name as user_name
+      `SELECT aa.*, a.name as asset_name, a.image, a.serial_number as serial_number, u.name as user_name
        FROM asset_assignments aa
        JOIN assets a ON aa.asset_id = a.id
        JOIN users u ON aa.user_id = u.id
@@ -40,9 +40,11 @@ export const getAssetAssignmentsByAsset = async (req, res) => {
     const { assetId } = req.params;
     const result = await pool.query(
       `SELECT aa.id, aa.user_id, u.name as user_name, u.role, aa.quantity, 
-              aa.assigned_date, aa.return_date, aa.status, aa.assigned_by_name
+              aa.assigned_date, aa.return_date, aa.status, aa.assigned_by_name,
+              a.serial_number as serial_number
        FROM asset_assignments aa
        JOIN users u ON aa.user_id = u.id
+       JOIN assets a ON aa.asset_id = a.id
        WHERE aa.asset_id = $1 AND aa.status = 'active'
        ORDER BY aa.assigned_date DESC`,
       [assetId]
@@ -56,13 +58,25 @@ export const getAssetAssignmentsByAsset = async (req, res) => {
 
 export const assignAssets = async (req, res) => {
   try {
-    const { asset_id, user_ids, quantities, assigned_by_id, assigned_by_name, return_date } = req.body;
+    const { asset_id, user_ids, quantities, assigned_by_id, assigned_by_name, return_date, serial_number } = req.body;
 
     if (!asset_id || !user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
       return res.status(400).json({ error: 'Asset ID and user IDs are required' });
     }
 
-    // Check if asset exists and validate total quantity
+    const normalizedSerial = String(serial_number || '').trim();
+    if (!normalizedSerial) {
+      return res.status(400).json({ error: 'Serial number is required' });
+    }
+
+    const duplicate = await pool.query(
+      'SELECT id FROM assets WHERE serial_number = $1',
+      [normalizedSerial]
+    );
+    if (duplicate.rows.length > 0) {
+      return res.status(400).json({ error: 'Serial number must be unique' });
+    }
+
     const assetResult = await pool.query(
       'SELECT name, image, amount FROM assets WHERE id = $1',
       [asset_id]
@@ -88,7 +102,6 @@ export const assignAssets = async (req, res) => {
       const userId = user_ids[i];
       const quantity = quantities[i] || 1;
 
-      // Check if assignment already exists for this user
       const existingResult = await pool.query(
         'SELECT id, quantity FROM asset_assignments WHERE asset_id = $1 AND user_id = $2',
         [asset_id, userId]
@@ -96,7 +109,6 @@ export const assignAssets = async (req, res) => {
 
       let result;
       if (existingResult.rows.length > 0) {
-        // Update existing assignment
         const newQuantity = existingResult.rows[0].quantity + quantity;
         result = await pool.query(
           `UPDATE asset_assignments 
@@ -106,7 +118,6 @@ export const assignAssets = async (req, res) => {
           [newQuantity, return_date || null, asset_id, userId]
         );
       } else {
-        // Create new assignment
         result = await pool.query(
           `INSERT INTO asset_assignments (asset_id, user_id, quantity, assigned_by_id, assigned_by_name, return_date, status)
            VALUES ($1, $2, $3, $4, $5, $6, 'active')
@@ -116,7 +127,6 @@ export const assignAssets = async (req, res) => {
       }
       assignments.push(result.rows[0]);
 
-      // Create notification for the user
       const notificationMessage = `You have been assigned ${quantity} unit(s) of ${assetName} ${assetImage}`;
       await pool.query(
         `INSERT INTO notifications (user_id, message, type, related_id)
@@ -125,11 +135,10 @@ export const assignAssets = async (req, res) => {
       );
     }
 
-    // Decrement the asset amount
     const newAmount = totalAssetAmount - totalRequested;
     await pool.query(
-      'UPDATE assets SET amount = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [newAmount, asset_id]
+      'UPDATE assets SET amount = $1, serial_number = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+      [newAmount, normalizedSerial, asset_id]
     );
 
     res.status(201).json({ assignments, message: `Assets assigned to ${user_ids.length} user(s)` });
@@ -170,7 +179,6 @@ export const returnAsset = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get the assignment to find the quantity, asset_id, and user_id
     const assignmentResult = await pool.query(
       'SELECT quantity, asset_id, user_id FROM asset_assignments WHERE id = $1',
       [id]
@@ -182,7 +190,6 @@ export const returnAsset = async (req, res) => {
 
     const { quantity, asset_id, user_id } = assignmentResult.rows[0];
 
-    // Get asset name for notification
     const assetResult = await pool.query(
       'SELECT name, image FROM assets WHERE id = $1',
       [asset_id]
@@ -190,7 +197,6 @@ export const returnAsset = async (req, res) => {
     const assetName = assetResult.rows[0]?.name;
     const assetImage = assetResult.rows[0]?.image;
 
-    // Update assignment status
     const result = await pool.query(
       `UPDATE asset_assignments 
        SET status = 'returned', return_date = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
@@ -199,13 +205,11 @@ export const returnAsset = async (req, res) => {
       [id]
     );
 
-    // Increment asset amount
     await pool.query(
       `UPDATE assets SET amount = amount + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
       [quantity, asset_id]
     );
 
-    // Create notification for the user
     const notificationMessage = `${quantity} unit(s) of ${assetName} ${assetImage} has been returned`;
     await pool.query(
       `INSERT INTO notifications (user_id, message, type, related_id)
@@ -224,7 +228,6 @@ export const deleteAssignment = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get the assignment to find the quantity, asset_id, and user_id
     const assignmentResult = await pool.query(
       'SELECT quantity, asset_id, user_id FROM asset_assignments WHERE id = $1',
       [id]
@@ -236,7 +239,6 @@ export const deleteAssignment = async (req, res) => {
 
     const { quantity, asset_id, user_id } = assignmentResult.rows[0];
 
-    // Get asset name for notification
     const assetResult = await pool.query(
       'SELECT name, image FROM assets WHERE id = $1',
       [asset_id]
@@ -244,19 +246,16 @@ export const deleteAssignment = async (req, res) => {
     const assetName = assetResult.rows[0]?.name;
     const assetImage = assetResult.rows[0]?.image;
 
-    // Delete the assignment
     await pool.query(
       'DELETE FROM asset_assignments WHERE id = $1',
       [id]
     );
 
-    // Increment asset amount back
     await pool.query(
       `UPDATE assets SET amount = amount + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
       [quantity, asset_id]
     );
 
-    // Create notification for the user
     const notificationMessage = `Your assignment of ${quantity} unit(s) of ${assetName} ${assetImage} has been deleted`;
     await pool.query(
       `INSERT INTO notifications (user_id, message, type, related_id)
