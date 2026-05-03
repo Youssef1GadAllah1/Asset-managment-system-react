@@ -3,22 +3,33 @@ import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Card, Badge } from '../../components/common'
 import { Layout } from '../../components/layout/Layout'
+import { Reveal } from '../../components/common/Reveal'
+import { useInView } from '../../hooks/useInView'
+import { useCountUp } from '../../hooks/useCountUp'
 import { getTasksByUser, getAllAssets, getAllEmployees, getAssetAssignmentsByUser, updateAsset, updateTask, createNotification } from '../../utils/api'
 import { BarChart3, Users, Package, CheckCircle, AlertCircle } from 'lucide-react'
 
-const StatCard = memo(({ icon: Icon, label, value, bgColor, borderColor }) => (
-  <Card className={`border-l-4 ${borderColor}`}>
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
-        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-      </div>
-      <div className={`p-3 rounded-lg ${bgColor}`}>
-        <Icon size={24} className="text-white" />
-      </div>
+const StatCard = memo(({ icon: Icon, label, value, bgColor, borderColor }) => {
+  const [ref, inView] = useInView()
+  const count = useCountUp(typeof value === 'number' ? value : 0, 1200, inView)
+  return (
+    <div ref={ref}>
+      <Card className={`card-hover border-l-4 ${borderColor}`}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
+            <p className={`text-3xl font-bold text-gray-900 dark:text-gray-100 ${inView ? 'count-enter' : 'opacity-0'}`}>
+              {typeof value === 'number' ? count : value}
+            </p>
+          </div>
+          <div className={`p-3 rounded-xl ${bgColor} shadow-sm`}>
+            <Icon size={24} className="text-white" />
+          </div>
+        </div>
+      </Card>
     </div>
-  </Card>
-))
+  )
+})
 StatCard.displayName = 'StatCard'
 
 const TaskItem = memo(({ task, onClick }) => {
@@ -178,15 +189,17 @@ export const Dashboard = () => {
   return (
     <Layout>
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('dashboard.welcome')}, {user?.name}! 👋
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">{today}</p>
-        </div>
+        <Reveal>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              {t('dashboard.welcome')}, {user?.name}! 👋
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">{today}</p>
+          </div>
+        </Reveal>
 
         {user?.role !== 'user' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 stagger">
             <StatCard icon={Users} label={t('dashboard.totalUsers')} value={employees.length} bgColor="bg-primary-600" borderColor="border-primary-600" />
             <StatCard icon={Package} label={t('dashboard.totalAssets')} value={assets.length} bgColor="bg-accent-500" borderColor="border-accent-500" />
             <StatCard icon={CheckCircle} label="Active Assets" value={assetStats.active} bgColor="bg-green-600" borderColor="border-green-600" />

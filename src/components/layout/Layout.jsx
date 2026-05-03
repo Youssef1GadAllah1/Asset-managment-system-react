@@ -10,7 +10,7 @@ export const Layout = ({ children }) => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto page-enter">
           {children}
         </main>
       </div>

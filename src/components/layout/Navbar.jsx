@@ -22,6 +22,7 @@ export const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate()
   const [showProfile, setShowProfile] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [scrolled, setScrolled] = useState(false)
   const [profileImage] = useState(
     localStorage.getItem(`userProfileImage_${user?.id || user?.userName}`) || null
   )
@@ -32,14 +33,20 @@ export const Navbar = ({ onMenuClick }) => {
       try {
         const data = await getUnreadNotificationCount(user.id)
         setUnreadCount(data?.count ?? 0)
-      } catch {
-        // silently ignore
-      }
+      } catch { /* silently ignore */ }
     }
     fetchUnread()
     const interval = setInterval(fetchUnread, 60000)
     return () => clearInterval(interval)
   }, [user?.id])
+
+  useEffect(() => {
+    const main = document.querySelector('main')
+    if (!main) return
+    const onScroll = () => setScrolled(main.scrollTop > 8)
+    main.addEventListener('scroll', onScroll, { passive: true })
+    return () => main.removeEventListener('scroll', onScroll)
+  }, [])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -57,97 +64,145 @@ export const Navbar = ({ onMenuClick }) => {
   }, [navigate])
 
   return (
-    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+    <nav
+      className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700
+        sticky top-0 z-40 transition-all duration-300
+        ${scrolled ? 'navbar-scrolled' : ''}`}
+    >
       <div className="px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
+
+          {/* Left — hamburger */}
           <div className="flex items-center space-x-4 ltr:space-x-4 rtl:space-x-reverse">
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-primary-600"
+              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg
+                text-primary-600 transition-all duration-200 active:scale-90"
             >
               <Menu size={24} />
             </button>
           </div>
 
+          {/* Centre — search */}
           <div className="hidden md:flex flex-1 ltr:mx-4 rtl:mx-4">
-            <div className="w-full relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <div className="w-full relative group">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400
+                  group-focus-within:text-primary-500 transition-colors duration-200"
+              />
               <input
                 type="text"
                 placeholder={t('navbar.search')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl
+                  focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                  dark:bg-gray-700 dark:text-gray-100
+                  transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-4 ltr:space-x-4 rtl:space-x-reverse">
+          {/* Right — actions */}
+          <div className="flex items-center space-x-2 ltr:space-x-2 rtl:space-x-reverse">
+
+            {/* Theme toggle */}
             <button
-              onClick={handleNotificationClick}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative text-primary-600"
+              onClick={toggleTheme}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl
+                text-gray-500 dark:text-gray-400
+                transition-all duration-200 active:scale-90"
+              title={isDark ? t('navbar.lightMode') : t('navbar.darkMode')}
             >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-accent-500 rounded-full text-white text-xs flex items-center justify-center px-1 font-bold">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
+              {isDark
+                ? <Sun size={20} className="text-yellow-400" />
+                : <Moon size={20} />}
             </button>
 
+            {/* Language */}
             <button
               onClick={toggleLanguage}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400"
-              title="Toggle Language"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl
+                text-gray-500 dark:text-gray-400
+                transition-all duration-200 active:scale-90"
+              title={t('navbar.language')}
             >
               <Globe size={20} />
             </button>
 
+            {/* Notifications */}
             <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400"
-              title="Toggle Theme"
+              onClick={handleNotificationClick}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl relative
+                text-primary-600 transition-all duration-200 active:scale-90"
             >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-xs
+                    rounded-full flex items-center justify-center font-bold
+                    animate-pulse"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
 
+            {/* Profile */}
             <div className="relative">
               <button
-                onClick={() => setShowProfile(prev => !prev)}
-                className="flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                onClick={() => setShowProfile(v => !v)}
+                className="flex items-center gap-2 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700
+                  rounded-xl transition-all duration-200 active:scale-95"
               >
                 {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover border-2 border-primary-200 dark:border-primary-700"
+                  />
                 ) : (
-                  <span className="text-2xl">👤</span>
+                  <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900
+                    flex items-center justify-center border-2 border-primary-200 dark:border-primary-700">
+                    <User size={16} className="text-primary-600" />
+                  </div>
                 )}
-                <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-gray-100">
+                <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[120px] truncate">
                   {user?.name}
                 </span>
               </button>
 
               {showProfile && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-                  <button
-                    onClick={() => { navigate('/profile'); setShowProfile(false) }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                  >
-                    <User size={18} />
-                    <span>{t('common.profile')}</span>
-                  </button>
-                  <button
-                    onClick={() => { navigate('/notifications'); setShowProfile(false) }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                  >
-                    <Bell size={18} />
-                    <span>{t('common.notifications')}</span>
-                  </button>
-                  <hr className="my-2 dark:border-gray-700" />
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center space-x-2"
-                  >
-                    <LogOut size={18} />
-                    <span>{t('common.logout')}</span>
-                  </button>
+                <div
+                  className="animate-slideDown absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800
+                    rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700
+                    overflow-hidden z-50"
+                >
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{user?.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <button
+                      onClick={() => { navigate('/profile'); setShowProfile(false) }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm
+                        text-gray-700 dark:text-gray-300
+                        hover:bg-gray-50 dark:hover:bg-gray-700
+                        transition-colors duration-150"
+                    >
+                      <User size={15} />
+                      {t('common.profile')}
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm
+                        text-red-600 dark:text-red-400
+                        hover:bg-red-50 dark:hover:bg-red-900/20
+                        transition-colors duration-150"
+                    >
+                      <LogOut size={15} />
+                      {t('common.logout')}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

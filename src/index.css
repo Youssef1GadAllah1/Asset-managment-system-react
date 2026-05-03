@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────
+   Base
+───────────────────────────────────────── */
 * {
   @apply transition-colors duration-200;
 }
@@ -10,14 +13,197 @@ body {
   @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-50;
 }
 
-::-webkit-scrollbar {
-  @apply w-2 h-2;
+::-webkit-scrollbar        { @apply w-2 h-2; }
+::-webkit-scrollbar-track  { @apply bg-gray-100 dark:bg-gray-800; }
+::-webkit-scrollbar-thumb  { @apply bg-primary-600 dark:bg-primary-500 rounded-full hover:bg-primary-700; }
+
+/* ─────────────────────────────────────────
+   Keyframes
+───────────────────────────────────────── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-primary-600 dark:bg-primary-500 rounded-full hover:bg-primary-700;
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalContentIn {
+  from { opacity: 0; transform: scale(0.92) translateY(16px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────
+   Page transition
+───────────────────────────────────────── */
+.page-enter {
+  animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─────────────────────────────────────────
+   Scroll-reveal utilities
+───────────────────────────────────────── */
+.reveal        { opacity: 0; }
+.reveal.visible        { animation: fadeInUp    0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.reveal-left.visible   { animation: fadeInLeft  0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.reveal-right.visible  { animation: fadeInRight 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.reveal-scale.visible  { animation: scaleIn     0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.reveal-down.visible   { animation: fadeInDown  0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+.reveal-left  { opacity: 0; }
+.reveal-right { opacity: 0; }
+.reveal-scale { opacity: 0; }
+.reveal-down  { opacity: 0; }
+
+/* animation-delay helpers */
+.anim-delay-100 { animation-delay: 0.10s !important; }
+.anim-delay-150 { animation-delay: 0.15s !important; }
+.anim-delay-200 { animation-delay: 0.20s !important; }
+.anim-delay-250 { animation-delay: 0.25s !important; }
+.anim-delay-300 { animation-delay: 0.30s !important; }
+.anim-delay-400 { animation-delay: 0.40s !important; }
+.anim-delay-500 { animation-delay: 0.50s !important; }
+.anim-delay-600 { animation-delay: 0.60s !important; }
+.anim-delay-700 { animation-delay: 0.70s !important; }
+
+/* ─────────────────────────────────────────
+   Stagger grid children
+───────────────────────────────────────── */
+.stagger > * { opacity: 0; }
+.stagger > *:nth-child(1)  { animation: fadeInUp 0.55s 0.05s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(2)  { animation: fadeInUp 0.55s 0.12s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(3)  { animation: fadeInUp 0.55s 0.19s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(4)  { animation: fadeInUp 0.55s 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(5)  { animation: fadeInUp 0.55s 0.33s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(6)  { animation: fadeInUp 0.55s 0.40s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(7)  { animation: fadeInUp 0.55s 0.47s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(8)  { animation: fadeInUp 0.55s 0.54s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(9)  { animation: fadeInUp 0.55s 0.61s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(10) { animation: fadeInUp 0.55s 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(11) { animation: fadeInUp 0.55s 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger > *:nth-child(12) { animation: fadeInUp 0.55s 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* ─────────────────────────────────────────
+   Card hover lift
+───────────────────────────────────────── */
+.card-hover {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.28s ease !important;
+}
+.card-hover:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.14) !important;
+}
+
+/* ─────────────────────────────────────────
+   Button press
+───────────────────────────────────────── */
+.btn-press { transition: transform 0.1s ease, box-shadow 0.1s ease; }
+.btn-press:active { transform: scale(0.95); }
+
+/* ─────────────────────────────────────────
+   Modal
+───────────────────────────────────────── */
+.modal-backdrop { animation: modalBackdropIn 0.25s ease forwards; }
+.modal-content  { animation: modalContentIn  0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* ─────────────────────────────────────────
+   Misc helpers
+───────────────────────────────────────── */
+.animate-float  { animation: float 3.5s ease-in-out infinite; }
+.animate-slideDown { animation: slideDown 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.shimmer {
+  background: linear-gradient(90deg,
+    theme('colors.gray.100') 25%,
+    theme('colors.gray.200') 50%,
+    theme('colors.gray.100') 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg,
+    theme('colors.gray.700') 25%,
+    theme('colors.gray.600') 50%,
+    theme('colors.gray.700') 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Navbar scroll shadow */
+.navbar-scrolled {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Sidebar item active glow */
+.sidebar-active-glow {
+  box-shadow: inset 3px 0 0 theme('colors.primary.600');
+}
+
+/* Table row hover */
+.table-row-hover {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.table-row-hover:hover {
+  transform: translateX(2px);
+}
+
+/* count-up entrance */
+.count-enter {
+  animation: countUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
