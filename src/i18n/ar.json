@@ -2,7 +2,7 @@
   "common": {
     "appName": "Next-Step",
     "systemName": "نظام إدارة الأصول",
-    "search": "البحث",
+    "search": "بحث",
     "logout": "تسجيل الخروج",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
@@ -19,7 +19,7 @@
     "confirmDelete": "هل أنت متأكد من رغبتك في حذف هذا العنصر؟",
     "deleteSuccess": "تم حذف العنصر بنجاح",
     "error": "خطأ",
-    "success": "نجح"
+    "success": "نجاح"
   },
   "navbar": {
     "search": "ابحث...",
@@ -27,45 +27,47 @@
     "profile": "الملف الشخصي",
     "language": "اللغة",
     "darkMode": "الوضع الداكن",
-    "lightMode": "الوضع الفاتح"
+    "lightMode": "الوضع الفاتح",
+    "switchToArabic": "التبديل إلى العربية",
+    "switchToEnglish": "التبديل إلى الإنجليزية"
   },
   "sidebar": {
-    "home": "الرئيسية",
+    "home": "لوحة التحكم",
     "inventory": "المخزون",
     "assets": "الأصول",
-    "assetsReport": "تقرير الأصول",
+    "assetsReport": "تقارير الأصول",
     "employees": "الموظفون",
     "reports": "التقارير",
-    "chat": "المحادثات",
+    "chat": "الرسائل",
     "notifications": "الإشعارات",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
     "logout": "تسجيل الخروج"
   },
   "dashboard": {
-    "welcome": "أهلا وسهلا",
+    "welcome": "مرحبًا بك",
     "totalUsers": "إجمالي المستخدمين",
     "totalAssets": "إجمالي الأصول",
     "totalProducts": "إجمالي المنتجات",
-    "activeUsers": "المستخدمين النشطين",
+    "activeUsers": "المستخدمون النشطون",
     "pendingReports": "التقارير المعلقة",
     "tasks": "المهام",
     "recentActivity": "النشاط الأخير",
     "statistics": "الإحصائيات"
   },
   "login": {
-    "title": "أهلا بك في EVA Cosmetics",
+    "title": "مرحبًا بك في EVA Cosmetics",
     "subtitle": "نظام إدارة الأصول",
-    "email": "عنوان البريد الإلكتروني",
+    "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "login": "دخول",
     "register": "تسجيل",
     "forgotPassword": "هل نسيت كلمة المرور؟",
     "rememberMe": "تذكرني",
-    "demoUsers": "مستخدمو العرض التوضيحي",
-    "user": "مستخدم عادي",
+    "demoUsers": "مستخدمو العرض",
+    "user": "مستخدم",
     "manager": "مدير الأصول",
-    "admin": "المسؤول"
+    "admin": "المدير"
   },
   "assets": {
     "title": "الأصول",
@@ -123,7 +125,7 @@
   "status": {
     "available": "متاح",
     "inUse": "قيد الاستخدام",
-    "maintenance": "تحت الصيانة",
+    "maintenance": "الصيانة",
     "retired": "متقاعد",
     "pending": "معلق",
     "completed": "مكتمل",
