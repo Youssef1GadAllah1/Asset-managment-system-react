@@ -3,11 +3,8 @@ import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
-// In-memory OTP store: email → { otp, expiresAt }
-// OTPs expire after 10 minutes
 const otpStore = new Map();
-
-const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
 function generateOtp() {
   return String(crypto.randomInt(100000, 999999));
@@ -29,7 +26,6 @@ async function sendOtpEmail(to, otp) {
   const transporter = createTransporter();
 
   if (!transporter) {
-    // Dev fallback: just log the OTP
     console.log(`[DEV] Password reset OTP for ${to}: ${otp}`);
     return;
   }
@@ -37,67 +33,56 @@ async function sendOtpEmail(to, otp) {
   await transporter.sendMail({
     from: `"Next-Step" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Your Password Reset Code – Next-Step',
+    subject: 'Reset your Next-Step password',
     html: `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9fafb;border-radius:12px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#0d9488;font-size:24px;margin:0;">Next-Step</h1>
-          <p style="color:#6b7280;margin:4px 0 0;">Asset Management System</p>
-        </div>
-        <div style="background:#fff;border-radius:8px;padding:24px;border:1px solid #e5e7eb;">
-          <h2 style="color:#111827;margin:0 0 8px;">Password Reset Code</h2>
-          <p style="color:#6b7280;margin:0 0 24px;line-height:1.6;">
-            Use the code below to reset your password. This code expires in <strong>10 minutes</strong>.
-          </p>
-          <div style="text-align:center;margin:24px 0;">
-            <span style="display:inline-block;padding:16px 32px;background:#f0fdfa;border:2px dashed #0d9488;border-radius:12px;font-size:36px;font-weight:bold;letter-spacing:8px;color:#0f766e;">
-              ${otp}
-            </span>
+      <div style="margin:0;background:#ecfeff;padding:32px 16px;font-family:Arial,sans-serif;">
+        <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(8,145,178,.12);border:1px solid #cffafe;">
+          <div style="background:linear-gradient(135deg,#0d9488,#14b8a6);padding:28px 32px;text-align:center;color:#fff;">
+            <div style="font-size:28px;font-weight:700;letter-spacing:.2px;">Next-Step</div>
+            <div style="font-size:14px;opacity:.9;margin-top:6px;">Asset Management System</div>
           </div>
-          <p style="color:#9ca3af;font-size:13px;margin:16px 0 0;">
-            If you didn't request a password reset, please ignore this email.
-            Your password will not be changed.
-          </p>
+          <div style="padding:32px;">
+            <h1 style="margin:0 0 10px;color:#0f172a;font-size:24px;">Password reset code</h1>
+            <p style="margin:0 0 22px;color:#475569;font-size:15px;line-height:1.6;">
+              Use this code to reset your password. It expires in <strong>10 minutes</strong>.
+            </p>
+            <div style="text-align:center;margin:28px 0;">
+              <div style="display:inline-block;padding:18px 28px;border-radius:16px;border:2px dashed #14b8a6;background:#f0fdfa;color:#0f766e;font-size:34px;font-weight:700;letter-spacing:8px;min-width:220px;">
+                ${otp}
+              </div>
+            </div>
+            <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6;">
+              If you didn’t request this, you can ignore this email.
+            </p>
+          </div>
         </div>
-        <p style="text-align:center;color:#d1d5db;font-size:12px;margin-top:24px;">
-          © ${new Date().getFullYear()} Next-Step · EVA Cosmetics Group
-        </p>
       </div>
     `,
   });
 }
 
-// POST /api/auth/forgot-password
-// Body: { email }
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
-    // Check user exists
-    const result = await pool.query('SELECT id, email FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    const key = email.toLowerCase().trim();
+    const result = await pool.query('SELECT id, email FROM users WHERE email = $1', [key]);
     if (result.rows.length === 0) {
-      // Return success even if user not found to prevent email enumeration
-      return res.json({ message: 'If this email exists, a reset code has been sent.' });
+      return res.json({ message: 'If this email exists, a code has been sent.' });
     }
 
     const otp = generateOtp();
-    const expiresAt = Date.now() + OTP_EXPIRY_MS;
+    otpStore.set(key, { otp, expiresAt: Date.now() + OTP_EXPIRY_MS });
+    await sendOtpEmail(key, otp);
 
-    // Store OTP (overwrite any existing one)
-    otpStore.set(email.toLowerCase().trim(), { otp, expiresAt });
-
-    await sendOtpEmail(email.toLowerCase().trim(), otp);
-
-    res.json({ message: 'Reset code sent to your email.' });
+    res.json({ message: 'Code sent.' });
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Failed to send reset code. Please try again.' });
+    res.status(500).json({ error: 'Failed to send reset code.' });
   }
 };
 
-// POST /api/auth/verify-otp
-// Body: { email, otp }
 export const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -106,27 +91,23 @@ export const verifyOtp = async (req, res) => {
     const key = email.toLowerCase().trim();
     const stored = otpStore.get(key);
 
-    if (!stored) return res.status(400).json({ error: 'No reset code found. Please request a new one.' });
+    if (!stored) return res.status(400).json({ error: 'Request a new code.' });
     if (Date.now() > stored.expiresAt) {
       otpStore.delete(key);
-      return res.status(400).json({ error: 'Reset code has expired. Please request a new one.' });
+      return res.status(400).json({ error: 'Code expired. Request a new one.' });
     }
     if (stored.otp !== String(otp).trim()) {
-      return res.status(400).json({ error: 'Incorrect code. Please try again.' });
+      return res.status(400).json({ error: 'Incorrect code.' });
     }
 
-    // Mark as verified (keep for reset step)
     otpStore.set(key, { ...stored, verified: true });
-
-    res.json({ message: 'Code verified successfully.' });
+    res.json({ message: 'Code verified.' });
   } catch (error) {
     console.error('Verify OTP error:', error);
     res.status(500).json({ error: 'Failed to verify code.' });
   }
 };
 
-// POST /api/auth/reset-password
-// Body: { email, otp, newPassword }
 export const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -141,29 +122,25 @@ export const resetPassword = async (req, res) => {
     const stored = otpStore.get(key);
 
     if (!stored || !stored.verified) {
-      return res.status(400).json({ error: 'Please verify your reset code first.' });
+      return res.status(400).json({ error: 'Verify the code first.' });
     }
     if (Date.now() > stored.expiresAt) {
       otpStore.delete(key);
-      return res.status(400).json({ error: 'Session expired. Please start over.' });
+      return res.status(400).json({ error: 'Session expired. Start again.' });
     }
     if (stored.otp !== String(otp).trim()) {
       return res.status(400).json({ error: 'Invalid reset session.' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const result = await pool.query(
-      'UPDATE users SET password = $1 WHERE email = $2 RETURNING id',
-      [hashedPassword, key]
-    );
+    const result = await pool.query('UPDATE users SET password = $1 WHERE email = $2 RETURNING id', [hashedPassword, key]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }
 
     otpStore.delete(key);
-
-    res.json({ message: 'Password reset successfully. You can now log in.' });
+    res.json({ message: 'Password updated.' });
   } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password.' });
