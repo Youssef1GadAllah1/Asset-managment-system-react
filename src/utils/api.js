@@ -78,6 +78,38 @@ export async function getAllUsers() {
   return apiCall('/auth/users/all');
 }
 
+// ============ USER MANAGEMENT ENDPOINTS ============
+export async function createUser(data) {
+  return apiCall('/users', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function getUserById(id) {
+  return apiCall(`/users/${id}`);
+}
+
+export async function updateUser(id, data) {
+  return apiCall(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function deleteUser(id) {
+  return apiCall(`/users/${id}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function changePassword(oldPassword, newPassword) {
+  return apiCall('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ oldPassword, newPassword })
+  });
+}
+
 // ============ ASSETS ENDPOINTS ============
 export async function getAllAssets() {
   return apiCall('/assets');
