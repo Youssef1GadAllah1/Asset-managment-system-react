@@ -31,20 +31,23 @@ export const AddEditUser = () => {
 
   const loadUser = async () => {
     try {
+      console.log('[v0] Loading user ID:', id)
       const user = await getUserById(id)
+      console.log('[v0] User loaded:', user)
       setFormData({
-        name: user.name,
-        email: user.email,
-        username: user.username,
+        name: user.name || '',
+        email: user.email || '',
+        username: user.username || '',
         password: '',
         confirmPassword: '',
         department: user.department || '',
         role: user.role || 'user',
         avatar: user.avatar || '👤',
       })
+      setLoading(false)
     } catch (error) {
-      setErrors({ submit: 'Failed to load user' })
-    } finally {
+      console.error('[v0] Error loading user:', error)
+      setErrors({ submit: error.message || 'Failed to load user. Please try again.' })
       setLoading(false)
     }
   }
@@ -110,6 +113,19 @@ export const AddEditUser = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+    let password = ''
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setFormData(prev => ({
+      ...prev,
+      password,
+      confirmPassword: password
+    }))
   }
 
   const copyToClipboard = (text) => {
@@ -290,23 +306,40 @@ export const AddEditUser = () => {
             </div>
 
             {/* Password Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label={isEditMode ? 'New Password (optional)' : 'Password'}
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={errors.password}
-              />
-              <Input
-                label={isEditMode ? 'Confirm New Password' : 'Confirm Password'}
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                error={errors.confirmPassword}
-              />
+            <div className="space-y-4">
+              {!isEditMode && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={generatePassword}
+                    className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition font-medium text-sm"
+                  >
+                    Generate Secure Password
+                  </button>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                    Generates a 12-character random password
+                  </p>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label={isEditMode ? 'New Password (optional)' : 'Password'}
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  placeholder={isEditMode ? 'Leave blank to keep current password' : ''}
+                />
+                <Input
+                  label={isEditMode ? 'Confirm New Password' : 'Confirm Password'}
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                />
+              </div>
             </div>
 
             {/* Role Selection */}

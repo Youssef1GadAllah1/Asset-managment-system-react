@@ -3,12 +3,14 @@ import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Input, FileUpload } from '../../components/common'
-import { Save, Upload } from 'lucide-react'
+import { Save, Lock } from 'lucide-react'
+import { changePassword } from '../../utils/api'
 
 export const Profile = () => {
   const { user } = useAuth()
   const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const [profileImage, setProfileImage] = useState(
     localStorage.getItem(`userProfileImage_${user?.id || user?.userName}`) || null
   )
@@ -20,9 +22,16 @@ export const Profile = () => {
     phoneNumber: user?.phoneNumber || '',
     jobTitle: user?.jobTitle || '',
     email: user?.email || '',
-    password: user?.password || '',
     role: user?.role || '',
   })
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
+  const [loadingPassword, setLoadingPassword] = useState(false)
 
   const handleImageChange = (file) => {
     if (file && file.type.startsWith('image/')) {
@@ -64,6 +73,47 @@ export const Profile = () => {
 
   const handleSave = () => {
     setIsEditing(false)
+  }
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess('')
+
+    if (!passwordData.oldPassword) {
+      setPasswordError('Current password is required')
+      return
+    }
+
+    if (!passwordData.newPassword) {
+      setPasswordError('New password is required')
+      return
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters')
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+
+    try {
+      setLoadingPassword(true)
+      await changePassword(passwordData.oldPassword, passwordData.newPassword)
+      setPasswordSuccess('Password changed successfully!')
+      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' })
+      setTimeout(() => {
+        setShowChangePassword(false)
+        setPasswordSuccess('')
+      }, 2000)
+    } catch (error) {
+      setPasswordError(error.message || 'Failed to change password')
+    } finally {
+      setLoadingPassword(false)
+    }
   }
 
   const roleLabels = {
@@ -149,12 +199,79 @@ export const Profile = () => {
             </p>
           </div>
 
-          {isEditing ? (
+          {showChangePassword ? (
+            <form onSubmit={handleChangePassword} className="space-y-6">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Change Your Password</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">Enter your current password and choose a new one</p>
+              </div>
+
+              {passwordError && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-red-700 dark:text-red-300 text-sm">{passwordError}</p>
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <p className="text-green-700 dark:text-green-300 text-sm">{passwordSuccess}</p>
+                </div>
+              )}
+
+              <Input
+                label="Current Password"
+                type="password"
+                value={passwordData.oldPassword}
+                onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
+                placeholder="Enter your current password"
+              />
+              <Input
+                label="New Password"
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                placeholder="Enter new password (min 8 characters)"
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                placeholder="Confirm your new password"
+              />
+
+              <div className="flex gap-3">
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={loadingPassword}
+                >
+                  <Lock size={18} className="ltr:mr-2 rtl:ml-2" />
+                  {loadingPassword ? 'Changing...' : 'Change Password'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowChangePassword(false)
+                    setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' })
+                    setPasswordError('')
+                    setPasswordSuccess('')
+                  }}
+                  disabled={loadingPassword}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          ) : isEditing ? (
             <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
               <Input
                 label="Username"
                 value={formData.userName}
                 onChange={(e) => setFormData({...formData, userName: e.target.value})}
+                disabled
               />
               <Input
                 label="Full Name"
@@ -166,6 +283,7 @@ export const Profile = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
+                disabled
               />
               <Input
                 label="Phone Number"
@@ -176,12 +294,6 @@ export const Profile = () => {
                 label="Job Title"
                 value={formData.jobTitle}
                 onChange={(e) => setFormData({...formData, jobTitle: e.target.value})}
-              />
-              <Input
-                label="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
               />
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Role</p>
@@ -244,9 +356,19 @@ export const Profile = () => {
                   </p>
                 </div>
               </div>
-              <Button onClick={() => setIsEditing(true)}>
-                Edit Profile
-              </Button>
+              <div className="flex gap-3">
+                <Button onClick={() => setIsEditing(true)} className="flex-1">
+                  Edit Profile
+                </Button>
+                <Button 
+                  onClick={() => setShowChangePassword(true)}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  <Lock size={18} className="ltr:mr-2 rtl:ml-2" />
+                  Change Password
+                </Button>
+              </div>
             </>
           )}
         </Card>
