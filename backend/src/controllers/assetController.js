@@ -14,8 +14,7 @@ const createNotification = async (userId, message, type = 'info', relatedId = nu
 
 const normalizeAsset = (asset) => ({
   ...asset,
-  serial_number: asset.serial_number ?? null,
-  serialNumber: asset.serial_number ?? null,
+  serialNumber: asset.serial_number ?? asset.serialNumber ?? null,
 });
 
 export const getAllAssets = async (req, res) => {
@@ -52,10 +51,11 @@ export const createAsset = async (req, res) => {
       return res.status(400).json({ error: 'Name and category are required' });
     }
 
-    if (serialNumber) {
-      const duplicate = await pool.query('SELECT id FROM assets WHERE serial_number = $1', [serialNumber.trim()]);
+    const serialValue = serialNumber?.trim() || null
+    if (serialValue) {
+      const duplicate = await pool.query('SELECT id FROM assets WHERE serial_number = $1', [serialValue])
       if (duplicate.rows.length > 0) {
-        return res.status(400).json({ error: 'Serial number must be unique' });
+        return res.status(400).json({ error: 'Serial number must be unique' })
       }
     }
 
@@ -63,7 +63,7 @@ export const createAsset = async (req, res) => {
       `INSERT INTO assets (name, category, type, price, date, location, status, color, image, serial_number, assigned_to_id, assigned_to_name)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [name, category, type, price, date, location, status || 'available', color, image, serialNumber?.trim() || null, assignedToId, assignedToName]
+      [name, category, type, price, date, location, status || 'available', color, image, serialValue, assignedToId, assignedToName]
     );
 
     res.status(201).json(normalizeAsset(result.rows[0]));
@@ -85,11 +85,11 @@ export const updateAsset = async (req, res) => {
 
     const oldAsset = currentAsset.rows[0];
 
-    if (serialNumber) {
-      const normalizedSerial = serialNumber.trim();
-      const duplicate = await pool.query('SELECT id FROM assets WHERE serial_number = $1 AND id <> $2', [normalizedSerial, id]);
+    const serialValue = serialNumber?.trim() || null
+    if (serialValue) {
+      const duplicate = await pool.query('SELECT id FROM assets WHERE serial_number = $1 AND id <> $2', [serialValue, id])
       if (duplicate.rows.length > 0) {
-        return res.status(400).json({ error: 'Serial number must be unique' });
+        return res.status(400).json({ error: 'Serial number must be unique' })
       }
     }
 
@@ -110,7 +110,7 @@ export const updateAsset = async (req, res) => {
        updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING *`,
-      [id, name, category, type, price, date, location, status, color, image, serialNumber?.trim() || null, assignedToId, assignedToName]
+      [id, name, category, type, price, date, location, status, color, image, serialValue, assignedToId, assignedToName]
     );
 
     if (result.rows.length === 0) {
