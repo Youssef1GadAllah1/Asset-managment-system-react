@@ -23,14 +23,34 @@ export async function apiCall(endpoint, options = {}) {
       headers
     });
     
+    // Handle non-OK responses
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || `API Error: ${response.status}`);
+      // Try to parse error as JSON, fallback to status text
+      let errorMessage = `API Error: ${response.status}`;
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } else {
+          errorMessage = await response.text() || errorMessage;
+        }
+      } catch (parseError) {
+        console.warn('Could not parse error response:', parseError);
+      }
+      throw new Error(errorMessage);
     }
     
-    return await response.json();
+    // Handle successful responses
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    } else {
+      // Return empty object for non-JSON responses
+      return {};
+    }
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('API Error:', error.message || error);
     throw error;
   }
 }
