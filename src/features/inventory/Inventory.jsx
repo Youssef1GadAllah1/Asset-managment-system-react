@@ -84,9 +84,9 @@ export const Inventory = () => {
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-4">
                   <p>Price: ${product.price}</p>
-                  <p>Stock: {product.quantity} units</p>
-                  <p>SKU: {product.sku || 'N/A'}</p>
-                  <p>Supplier: {product.supplier || 'N/A'}</p>
+                  <p>Stock: {product.count}</p>
+                  <p>Type: {product.type}</p>
+                  <p>Color: {product.color}</p>
                 </div>
                 <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <Button

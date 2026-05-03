@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input, Select } from '../../components/common'
-import { createReport, getAllAssets, getAllEmployees, getAllUsers, getAssetAssignmentsByUser } from '../../utils/api'
+import { Card, Button, Input } from '../../components/common'
+import { createReport, getAllAssets, getAllUsers, getAssetAssignmentsByUser } from '../../utils/api'
 
 export const AddReport = () => {
   const navigate = useNavigate()
@@ -18,7 +18,7 @@ export const AddReport = () => {
     directed_to_id: '',
   })
   const [assets, setAssets] = useState([])
-  const [recipients, setRecipients] = useState([])
+  const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -27,9 +27,8 @@ export const AddReport = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [assetsData, employeesData, usersData] = await Promise.all([
+        const [assetsData, usersData] = await Promise.all([
           getAllAssets(),
-          getAllEmployees(),
           getAllUsers()
         ])
         
@@ -47,20 +46,11 @@ export const AddReport = () => {
         }
         // For admin and asset_manager, show all assets (no filtering)
         
-        // Combine employees and users, removing duplicates
-        const allRecipients = [
-          ...(employeesData || []).map(emp => ({ id: emp.id, name: emp.name, department: emp.department, type: 'employee' })),
-          ...(usersData || []).map(usr => ({ id: usr.id, name: usr.name, department: usr.department, type: 'user' }))
-        ]
-        
-        // Remove duplicates based on id
-        const uniqueRecipients = Array.from(new Map(allRecipients.map(item => [item.id, item])).values())
-        
         setAssets(availableAssets)
-        setRecipients(uniqueRecipients)
+        setEmployees(usersData || [])
       } catch (error) {
         console.error('Error loading data:', error)
-        setError('Failed to load assets and recipients')
+        setError('Failed to load assets and users')
       } finally {
         setLoading(false)
       }
@@ -160,19 +150,26 @@ export const AddReport = () => {
               />
             </div>
 
-            <Select
-              label={`Asset ${user?.role === 'user' ? '(Your assigned assets)' : ''}`}
-              value={formData.asset_id}
-              onChange={(e) => setFormData({...formData, asset_id: e.target.value})}
-              badge="Asset Reference"
-              icon="📦"
-              options={assets.map(asset => ({ id: asset.id, label: asset.name }))}
-              disabled={submitting}
-              placeholder="Select an asset (optional)"
-            />
-            {user?.role === 'user' && assets.length === 0 && (
-              <p className="text-sm text-gray-500 mt-2">No assets assigned to you</p>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Asset
+                {user?.role === 'user' && <span className="text-xs text-gray-500 ml-2">(Your assigned assets)</span>}
+              </label>
+              <select
+                value={formData.asset_id}
+                onChange={(e) => setFormData({...formData, asset_id: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitting}
+              >
+                <option value="">Select an asset (optional)</option>
+                {assets.map(asset => (
+                  <option key={asset.id} value={asset.id}>{asset.name}</option>
+                ))}
+              </select>
+              {user?.role === 'user' && assets.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">No assets assigned to you</p>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -184,40 +181,39 @@ export const AddReport = () => {
                 </div>
               </div>
 
-              <Select
-                label="Directed To (Employee or User)"
-                value={formData.directed_to_id}
-                onChange={(e) => setFormData({...formData, directed_to_id: e.target.value})}
-                badge="Recipient"
-                icon="👤"
-                options={recipients.map(recipient => ({ 
-                  id: recipient.id, 
-                  label: `${recipient.name} (${recipient.department || 'N/A'} - ${recipient.type === 'user' ? 'User' : 'Employee'})`
-                }))}
-                disabled={submitting}
-                placeholder="Select a recipient (optional)"
-              />
-              {recipients.length === 0 && (
-                <p className="text-sm text-amber-600 dark:text-amber-400">No employees or users found</p>
-              )}
-              {recipients.length > 0 && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">{recipients.length} recipients available</p>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Directed To
+                </label>
+                <select
+                  value={formData.directed_to_id}
+                  onChange={(e) => setFormData({...formData, directed_to_id: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={submitting}
+                >
+                  <option value="">Select employee (optional)</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <Select
-              label="Status"
-              value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
-              badge="Report Status"
-              icon="📋"
-              options={[
-                { id: 'pending', label: '⏱️ Pending' },
-                { id: 'in_progress', label: '⚙️ In Progress' },
-                { id: 'completed', label: '✓ Completed' }
-              ]}
-              disabled={submitting}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitting}
+              >
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
 
             <div className="flex gap-3 pt-6">
               <Button 

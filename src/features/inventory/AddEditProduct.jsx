@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input, Select } from '../../components/common'
+import { Card, Button, Input } from '../../components/common'
 import { createProduct, updateProduct, getProductById } from '../../utils/api'
 
 export const AddEditProduct = () => {
@@ -96,15 +96,21 @@ export const AddEditProduct = () => {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select
-                label="Category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                badge="Product Type"
-                icon="🏷️"
-                options={categories.map(cat => ({ id: cat, label: cat }))}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
 
               <Input
                 label="SKU"
@@ -162,18 +168,20 @@ export const AddEditProduct = () => {
               />
             </div>
 
-            <Select
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              badge="Product Status"
-              icon="✓"
-              options={[
-                { id: 'active', label: '✓ Active' },
-                { id: 'inactive', label: '✗ Inactive' }
-              ]}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
 
             <div className="flex gap-3 pt-6">
               <Button type="submit" className="flex-1">

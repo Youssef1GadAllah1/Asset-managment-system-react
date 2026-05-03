@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input, Badge, Select } from '../../components/common'
+import { Card, Button, Input, Badge } from '../../components/common'
 import { createAsset, updateAsset, getAssetById, getAllEmployees, getAssetAssignmentsByAsset, updateAssetAssignment, deleteAssetAssignment } from '../../utils/api'
 import { useAuth } from '../../context/AuthContext'
 import { Trash2, Edit2 } from 'lucide-react'
@@ -197,15 +197,21 @@ export const AddEditAsset = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select
-                label={t('assets.category')}
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                badge="Asset Type"
-                icon="📦"
-                options={categories.map(cat => ({ id: cat, label: cat }))}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('assets.category')}
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
 
               <Input
                 label={t('assets.price')}
@@ -242,16 +248,24 @@ export const AddEditAsset = () => {
                 value={formData.color}
                 onChange={handleChange}
               />
-              <Select
-                label={t('assets.status')}
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                disabled={user?.role === 'user'}
-                badge="Asset Status"
-                icon="🔄"
-                options={statuses.map(status => ({ id: status.value, label: status.label }))}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('assets.status')}
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  disabled={user?.role === 'user'}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {statuses.map(status => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <Input

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { Layout } from '../../components/layout/Layout'
-import { Card, Button, Input, Select } from '../../components/common'
+import { Card, Button, Input } from '../../components/common'
 import { createTask, updateTask, getTaskById, getAllEmployees } from '../../utils/api'
 
 export const AddEditTask = () => {
@@ -162,15 +162,22 @@ export const AddEditTask = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select
-                label="Assign To"
-                name="assigned_to_id"
-                value={formData.assigned_to_id}
-                onChange={handleEmployeeChange}
-                badge="Assignee"
-                icon="👤"
-                options={employees.map(emp => ({ id: emp.id, label: emp.name, department: emp.department }))}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Assign To
+                </label>
+                <select
+                  name="assigned_to_id"
+                  value={formData.assigned_to_id}
+                  onChange={handleEmployeeChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="">Select employee</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </select>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -186,34 +193,38 @@ export const AddEditTask = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select
-                label="Priority"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                badge="Urgency Level"
-                icon="⚡"
-                options={[
-                  { id: 'low', label: '🟢 Low' },
-                  { id: 'medium', label: '🟡 Medium' },
-                  { id: 'high', label: '🔴 High' }
-                ]}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Priority
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
             </div>
 
-            <Select
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              badge="Task Status"
-              icon="✓"
-              options={[
-                { id: 'pending', label: '⏱️ Pending' },
-                { id: 'in_progress', label: '⚙️ In Progress' },
-                { id: 'completed', label: '✅ Completed' }
-              ]}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-gray-100"
+              >
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
 
             <div className="flex gap-3 pt-6">
               <Button type="submit" className="flex-1" disabled={loading}>

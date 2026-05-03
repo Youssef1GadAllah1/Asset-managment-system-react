@@ -1,6 +1,5 @@
 // API Helper - All requests go to Backend
-// Use relative path that will be proxied by Vite in development
-const API_URL = '/api';
+const API_URL = 'http://localhost:3001/api';
 
 /**
  * Generic API call function with auto token handling
@@ -23,34 +22,14 @@ export async function apiCall(endpoint, options = {}) {
       headers
     });
     
-    // Handle non-OK responses
     if (!response.ok) {
-      // Try to parse error as JSON, fallback to status text
-      let errorMessage = `API Error: ${response.status}`;
-      try {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } else {
-          errorMessage = await response.text() || errorMessage;
-        }
-      } catch (parseError) {
-        console.warn('Could not parse error response:', parseError);
-      }
-      throw new Error(errorMessage);
+      const error = await response.json();
+      throw new Error(error.error || `API Error: ${response.status}`);
     }
     
-    // Handle successful responses
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    } else {
-      // Return empty object for non-JSON responses
-      return {};
-    }
+    return await response.json();
   } catch (error) {
-    console.error('API Error:', error.message || error);
+    console.error('API Error:', error);
     throw error;
   }
 }
@@ -76,38 +55,6 @@ export async function getCurrentUser() {
 
 export async function getAllUsers() {
   return apiCall('/auth/users/all');
-}
-
-// ============ USER MANAGEMENT ENDPOINTS ============
-export async function createUser(data) {
-  return apiCall('/users', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-export async function getUserById(id) {
-  return apiCall(`/users/${id}`);
-}
-
-export async function updateUser(id, data) {
-  return apiCall(`/users/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
-}
-
-export async function deleteUser(id) {
-  return apiCall(`/users/${id}`, {
-    method: 'DELETE'
-  });
-}
-
-export async function changePassword(oldPassword, newPassword) {
-  return apiCall('/auth/change-password', {
-    method: 'POST',
-    body: JSON.stringify({ oldPassword, newPassword })
-  });
 }
 
 // ============ ASSETS ENDPOINTS ============

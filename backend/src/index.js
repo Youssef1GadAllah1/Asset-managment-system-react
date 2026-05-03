@@ -6,7 +6,6 @@ import { authenticateToken } from './middleware/auth.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 import assetRoutes from './routes/assetRoutes.js';
 import assetAssignmentRoutes from './routes/assetAssignmentRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
@@ -34,7 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 
 // Protected routes
-app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/assets', authenticateToken, assetRoutes);
 app.use('/api/asset-assignments', authenticateToken, assetAssignmentRoutes);
 app.use('/api/employees', authenticateToken, employeeRoutes);

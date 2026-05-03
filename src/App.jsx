@@ -11,8 +11,6 @@ import { AddEditAsset } from './features/assets/AddEditAsset'
 import { AssignAsset } from './features/assets/AssignAsset'
 import { Employees } from './features/employees/Employees'
 import { AddEditEmployee } from './features/employees/AddEditEmployee'
-import { Users } from './features/users/Users'
-import { AddEditUser } from './features/users/AddEditUser'
 import { Reports } from './features/reports/Reports'
 import { AddReport } from './features/reports/AddReport'
 import { Tasks } from './features/tasks/Tasks'
@@ -98,32 +96,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AddEditEmployee />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Users Routes */}
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/add"
-              element={
-                <ProtectedRoute>
-                  <AddEditUser />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/edit/:id"
-              element={
-                <ProtectedRoute>
-                  <AddEditUser />
                 </ProtectedRoute>
               }
             />
