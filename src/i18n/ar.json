@@ -61,6 +61,7 @@
     "login": "دخول",
     "register": "تسجيل",
     "forgotPassword": "هل نسيت كلمة المرور؟",
+    "rememberMe": "تذكرني",
     "demoUsers": "مستخدمو العرض التوضيحي",
     "user": "مستخدم عادي",
     "manager": "مدير الأصول",

@@ -1,44 +1,64 @@
 import { createContext, useState, useContext, useEffect } from 'react'
-import { login as apiLogin, getCurrentUser } from '../utils/api'
+import { login as apiLogin } from '../utils/api'
 
 const AuthContext = createContext()
+
+const getStorage = () => {
+  const remember = localStorage.getItem('rememberMe') === 'true'
+  return remember ? localStorage : sessionStorage
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Check if user is logged in from localStorage on mount
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
-    
+    const token =
+      localStorage.getItem('token') || sessionStorage.getItem('token')
+    const savedUser =
+      localStorage.getItem('user') || sessionStorage.getItem('user')
+
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser))
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('user')
+      }
     }
     setLoading(false)
   }, [])
 
-  // Backend login - communicates with API
-  const login = async (email, password) => {
-    try {
-      const { user: userData, token } = await apiLogin(email, password)
-      
-      // Save token and user to localStorage
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(userData))
-      
-      setUser(userData)
-      return userData
-    } catch (error) {
-      throw error
+  const login = async (email, password, rememberMe = false) => {
+    const { user: userData, token } = await apiLogin(email, password)
+
+    localStorage.setItem('rememberMe', String(rememberMe))
+
+    const storage = rememberMe ? localStorage : sessionStorage
+    storage.setItem('token', token)
+    storage.setItem('user', JSON.stringify(userData))
+
+    if (!rememberMe) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    } else {
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
     }
+
+    setUser(userData)
+    return userData
   }
 
-  // Backend logout
   const logout = () => {
     setUser(null)
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    localStorage.removeItem('rememberMe')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
   }
 
   return (
@@ -50,8 +70,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider')
   return context
 }

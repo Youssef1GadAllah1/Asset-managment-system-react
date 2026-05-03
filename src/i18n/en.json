@@ -61,6 +61,7 @@
     "login": "Login",
     "register": "Register",
     "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me",
     "demoUsers": "Demo Users",
     "user": "User",
     "manager": "Asset Manager",
