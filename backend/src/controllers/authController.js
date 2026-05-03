@@ -46,14 +46,21 @@ export const login = async (req, res) => {
       [email]
     );
 
+    console.log('[v0] Query result:', result.rows.length, 'rows');
+
     if (result.rows.length === 0) {
+      console.log('[v0] User not found:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = result.rows[0];
+    console.log('[v0] User found:', user.email);
     const validPassword = await bcrypt.compare(password, user.password);
 
+    console.log('[v0] Password match:', validPassword);
+
     if (!validPassword) {
+      console.log('[v0] Invalid password for:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
