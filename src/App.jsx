@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 
 const Landing = lazy(() => import('./features/landing/Landing').then(m => ({ default: m.Landing })))
 const Login = lazy(() => import('./features/auth/Login').then(m => ({ default: m.Login })))
+const ForgotPassword = lazy(() => import('./features/auth/ForgotPassword').then(m => ({ default: m.ForgotPassword })))
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })))
 const Assets = lazy(() => import('./features/assets/Assets').then(m => ({ default: m.Assets })))
 const AddEditAsset = lazy(() => import('./features/assets/AddEditAsset').then(m => ({ default: m.AddEditAsset })))
@@ -41,6 +42,7 @@ function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
 
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 

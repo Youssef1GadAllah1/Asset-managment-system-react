@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { Button, Input, Card } from '../../components/common'
 import { Logo } from '../../components/common/Logo'
+import { Reveal } from '../../components/common/Reveal'
 import { Eye, EyeOff } from 'lucide-react'
 
 export const Login = () => {
@@ -77,20 +78,29 @@ export const Login = () => {
               </button>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
-              />
-              <label
-                htmlFor="rememberMe"
-                className="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none"
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none"
+                >
+                  {t('login.rememberMe') || 'Remember me'}
+                </label>
+              </div>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400
+                  dark:hover:text-primary-300 font-medium transition-colors duration-200 hover:underline"
               >
-                {t('login.rememberMe') || 'Remember me'}
-              </label>
+                Forgot password?
+              </Link>
             </div>
 
             <Button

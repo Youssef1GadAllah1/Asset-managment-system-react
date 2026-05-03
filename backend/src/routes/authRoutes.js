@@ -10,6 +10,11 @@ import {
   updateUserAccount,
   deleteUserAccount
 } from '../controllers/authController.js';
+import {
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
+} from '../controllers/passwordResetController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -20,5 +25,10 @@ router.post('/login', login);
 router.get('/me', authenticateToken, getCurrentUser);
 router.get('/users/all', authenticateToken, getAllUsers);
 router.post('/change-password', authenticateToken, changePassword);
+
+// Password reset (public — no auth required)
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-otp', verifyOtp);
+router.post('/reset-password', resetPassword);
 
 export default router;
