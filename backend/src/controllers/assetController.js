@@ -20,9 +20,7 @@ const normalizeAsset = (asset) => ({
 
 export const getAllAssets = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM assets ORDER BY created_at DESC'
-    );
+    const result = await pool.query('SELECT * FROM assets ORDER BY created_at DESC');
     res.json(result.rows.map(normalizeAsset));
   } catch (error) {
     console.error('Get assets error:', error);
@@ -54,11 +52,18 @@ export const createAsset = async (req, res) => {
       return res.status(400).json({ error: 'Name and category are required' });
     }
 
+    if (serialNumber) {
+      const duplicate = await pool.query('SELECT id FROM assets WHERE serial_number = $1', [serialNumber.trim()]);
+      if (duplicate.rows.length > 0) {
+        return res.status(400).json({ error: 'Serial number must be unique' });
+      }
+    }
+
     const result = await pool.query(
       `INSERT INTO assets (name, category, type, price, date, location, status, color, image, serial_number, assigned_to_id, assigned_to_name)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [name, category, type, price, date, location, status || 'available', color, image, serialNumber || null, assignedToId, assignedToName]
+      [name, category, type, price, date, location, status || 'available', color, image, serialNumber?.trim() || null, assignedToId, assignedToName]
     );
 
     res.status(201).json(normalizeAsset(result.rows[0]));
@@ -80,6 +85,14 @@ export const updateAsset = async (req, res) => {
 
     const oldAsset = currentAsset.rows[0];
 
+    if (serialNumber) {
+      const normalizedSerial = serialNumber.trim();
+      const duplicate = await pool.query('SELECT id FROM assets WHERE serial_number = $1 AND id <> $2', [normalizedSerial, id]);
+      if (duplicate.rows.length > 0) {
+        return res.status(400).json({ error: 'Serial number must be unique' });
+      }
+    }
+
     const result = await pool.query(
       `UPDATE assets SET 
        name = COALESCE($2, name),
@@ -97,7 +110,7 @@ export const updateAsset = async (req, res) => {
        updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING *`,
-      [id, name, category, type, price, date, location, status, color, image, serialNumber, assignedToId, assignedToName]
+      [id, name, category, type, price, date, location, status, color, image, serialNumber?.trim() || null, assignedToId, assignedToName]
     );
 
     if (result.rows.length === 0) {
@@ -107,36 +120,16 @@ export const updateAsset = async (req, res) => {
     const updatedAsset = result.rows[0];
 
     if (assignedToId && !oldAsset.assigned_to_id) {
-      await createNotification(
-        assignedToId,
-        `Asset "${updatedAsset.name}" has been assigned to you`,
-        'asset_assigned',
-        updatedAsset.id
-      );
+      await createNotification(assignedToId, `Asset "${updatedAsset.name}" has been assigned to you`, 'asset_assigned', updatedAsset.id);
     }
 
     if (assignedToId && oldAsset.assigned_to_id && oldAsset.assigned_to_id !== assignedToId) {
-      await createNotification(
-        assignedToId,
-        `Asset "${updatedAsset.name}" has been assigned to you`,
-        'asset_assigned',
-        updatedAsset.id
-      );
-      await createNotification(
-        oldAsset.assigned_to_id,
-        `Asset "${updatedAsset.name}" has been reassigned from you`,
-        'asset_removed',
-        updatedAsset.id
-      );
+      await createNotification(assignedToId, `Asset "${updatedAsset.name}" has been assigned to you`, 'asset_assigned', updatedAsset.id);
+      await createNotification(oldAsset.assigned_to_id, `Asset "${updatedAsset.name}" has been reassigned from you`, 'asset_removed', updatedAsset.id);
     }
 
     if (!assignedToId && oldAsset.assigned_to_id) {
-      await createNotification(
-        oldAsset.assigned_to_id,
-        `Asset "${updatedAsset.name}" has been removed from your assignment`,
-        'asset_removed',
-        updatedAsset.id
-      );
+      await createNotification(oldAsset.assigned_to_id, `Asset "${updatedAsset.name}" has been removed from your assignment`, 'asset_removed', updatedAsset.id);
     }
 
     res.json(normalizeAsset(updatedAsset));
@@ -150,10 +143,7 @@ export const deleteAsset = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      'DELETE FROM assets WHERE id = $1 RETURNING *',
-      [id]
-    );
+    const result = await pool.query('DELETE FROM assets WHERE id = $1 RETURNING *', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Asset not found' });
@@ -169,10 +159,7 @@ export const deleteAsset = async (req, res) => {
 export const getAssetsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM assets WHERE assigned_to_id = $1 ORDER BY created_at DESC',
-      [userId]
-    );
+    const result = await pool.query('SELECT * FROM assets WHERE assigned_to_id = $1 ORDER BY created_at DESC', [userId]);
     res.json(result.rows.map(normalizeAsset));
   } catch (error) {
     console.error('Get user assets error:', error);

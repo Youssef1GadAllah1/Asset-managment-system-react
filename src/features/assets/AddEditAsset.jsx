@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Input, Badge, Select } from '../../components/common'
-import { createAsset, updateAsset, getAssetById, getAllEmployees, getAssetAssignmentsByAsset, updateAssetAssignment, deleteAssetAssignment } from '../../utils/api'
+import { createAsset, updateAsset, getAssetById, getAssetAssignmentsByAsset, updateAssetAssignment, deleteAssetAssignment } from '../../utils/api'
 import { useAuth } from '../../context/AuthContext'
 import { Trash2, Edit2 } from 'lucide-react'
 
@@ -97,7 +97,6 @@ export const AddEditAsset = () => {
     const newErrors = {}
 
     if (!formData.name.trim()) newErrors.name = 'Asset name is required'
-    if (!formData.serialNumber.trim()) newErrors.serialNumber = 'Serial number is required'
     if (!formData.price) newErrors.price = 'Price is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
 
@@ -108,10 +107,14 @@ export const AddEditAsset = () => {
 
     try {
       setLoading(true)
+      const payload = {
+        ...formData,
+        serialNumber: formData.serialNumber.trim() || null,
+      }
       if (id) {
-        await updateAsset(id, formData)
+        await updateAsset(id, payload)
       } else {
-        await createAsset(formData)
+        await createAsset(payload)
       }
       navigate('/assets')
     } catch (error) {
@@ -193,7 +196,6 @@ export const AddEditAsset = () => {
                 name="serialNumber"
                 value={formData.serialNumber}
                 onChange={handleChange}
-                error={errors.serialNumber}
                 placeholder="SN-0001"
               />
             </div>
