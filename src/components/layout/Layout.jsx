@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 
 export const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(() => localStorage.getItem('sidebarOpen') === 'true')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', sidebarOpen ? 'true' : 'false')
+  }, [sidebarOpen])
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">

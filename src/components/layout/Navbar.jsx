@@ -69,32 +69,24 @@ export const Navbar = ({ onMenuClick, searchTerm = '', onSearchChange }) => {
           <div className="flex items-center space-x-4 ltr:space-x-4 rtl:space-x-reverse">
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-primary-600 transition-all duration-200 active:scale-90"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-primary-600 transition-all duration-200 active:scale-90"
             >
               <Menu size={24} />
             </button>
-          </div>
-
-          <div className="hidden md:flex flex-1 ltr:mx-4 rtl:mx-4 items-center gap-3">
-            <button
-              onClick={onMenuClick}
-              className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-primary-600 transition-all duration-200 active:scale-90 shrink-0"
-              aria-label="Open sidebar"
-            >
-              <Menu size={24} />
-            </button>
-            <div className="w-full relative group">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors duration-200"
-              />
-              <input
-                type="text"
-                placeholder={t('navbar.search')}
-                value={searchTerm}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
-              />
+            <div className="hidden lg:block">
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder={t('navbar.search')}
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  className="w-72 pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                />
+              </div>
             </div>
           </div>
 
