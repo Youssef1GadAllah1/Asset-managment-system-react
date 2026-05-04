@@ -92,8 +92,6 @@ export const updateTask = async (req, res) => {
     }
 
     const oldTask = currentTask.rows[0];
-    const finalAssignedFromId = assigned_from_id || req.user?.id;
-    const finalAssignedFromName = assigned_from_name || req.user?.name;
 
     const result = await pool.query(
       `UPDATE tasks SET 
@@ -107,11 +105,11 @@ export const updateTask = async (req, res) => {
        status = COALESCE($9, status),
        priority = COALESCE($10, priority),
        due_date = COALESCE($11, due_date),
-       completed_at = COALESCE($12, completed_at),
+       completed_at = CASE WHEN $9 = 'completed' AND completed_at IS NULL THEN CURRENT_TIMESTAMP ELSE COALESCE($12, completed_at) END,
        updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING *`,
-      [id, title, description, assigned_to_id, assigned_to_name, finalAssignedFromId, finalAssignedFromName, asset_id, status, priority, due_date, completed_at]
+      [id, title, description, assigned_to_id, assigned_to_name, assigned_from_id || null, assigned_from_name || null, asset_id, status, priority, due_date, completed_at]
     );
 
     if (result.rows.length === 0) {

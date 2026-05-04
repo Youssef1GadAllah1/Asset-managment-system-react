@@ -56,8 +56,8 @@ export const Tasks = () => {
 
   const handleSaveEdit = async () => {
     try {
-      await updateTask(selectedTask.id, editFormData)
-      setTasks(tasks.map(t => t.id === selectedTask.id ? { ...editFormData, id: selectedTask.id } : t))
+      const updated = await updateTask(selectedTask.id, editFormData)
+      setTasks(tasks.map(t => t.id === selectedTask.id ? updated : t))
       setShowEditModal(false)
     } catch (error) {
       console.error('Error updating task:', error)
