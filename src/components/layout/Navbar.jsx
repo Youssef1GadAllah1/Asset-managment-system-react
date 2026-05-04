@@ -75,7 +75,14 @@ export const Navbar = ({ onMenuClick, searchTerm = '', onSearchChange }) => {
             </button>
           </div>
 
-          <div className="hidden md:flex flex-1 ltr:mx-4 rtl:mx-4">
+          <div className="hidden md:flex flex-1 ltr:mx-4 rtl:mx-4 items-center gap-3">
+            <button
+              onClick={onMenuClick}
+              className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-primary-600 transition-all duration-200 active:scale-90 shrink-0"
+              aria-label="Open sidebar"
+            >
+              <Menu size={24} />
+            </button>
             <div className="w-full relative group">
               <Search
                 size={18}
