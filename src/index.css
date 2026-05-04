@@ -195,10 +195,6 @@ body {
   box-shadow: inset 3px 0 0 theme('colors.primary.600');
 }
 
-.sidebar-expanded main {
-  max-width: 100%;
-}
-
 /* Table row hover */
 .table-row-hover {
   transition: background-color 0.15s ease, transform 0.15s ease;

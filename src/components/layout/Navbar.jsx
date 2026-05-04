@@ -66,16 +66,30 @@ export const Navbar = ({ onMenuClick, searchTerm = '', onSearchChange }) => {
   return (
     <nav className={`bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/70 dark:border-gray-700 sticky top-0 z-40 transition-all duration-300 ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 ltr:space-x-4 rtl:space-x-reverse">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center space-x-3 ltr:space-x-3 rtl:space-x-reverse min-w-0">
             <button
               onClick={onMenuClick}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-primary-600 transition-all duration-200 active:scale-90"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-primary-600 transition-all duration-200 active:scale-90 shrink-0"
             >
               <Menu size={24} />
             </button>
-            <div className="hidden lg:block">
-              <Logo size="sm" to="/dashboard" />
+            <Logo size="sm" to="/dashboard" />
+          </div>
+
+          <div className="flex-1 max-w-2xl hidden md:block">
+            <div className="relative group">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors duration-200"
+              />
+              <input
+                type="text"
+                placeholder={t('navbar.search')}
+                value={searchTerm}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+              />
             </div>
           </div>
 
