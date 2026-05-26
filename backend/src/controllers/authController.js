@@ -77,7 +77,8 @@ export const login = async (req, res) => {
       username: user.username,
       role: user.role,
       department: user.department,
-      avatar: user.avatar
+      avatar: user.avatar,
+      profile_image: user.profile_image || null,
     };
 
     res.json({ user: userData, token });
@@ -90,7 +91,7 @@ export const login = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, username, role, department, avatar FROM users WHERE id = $1',
+      'SELECT id, name, email, username, role, department, avatar, profile_image FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -250,6 +251,31 @@ export const updateUserAccount = async (req, res) => {
       return res.status(400).json({ error: 'Email or username already exists' });
     }
     res.status(500).json({ error: 'Failed to update user' });
+  }
+};
+
+export const updateProfileImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { profile_image } = req.body;
+
+    if (req.user.id !== parseInt(id) && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (!profile_image) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    await pool.query(
+      'UPDATE users SET profile_image = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [profile_image, id]
+    );
+
+    res.json({ profile_image });
+  } catch (error) {
+    console.error('Update profile image error:', error);
+    res.status(500).json({ error: 'Failed to update profile image' });
   }
 };
 

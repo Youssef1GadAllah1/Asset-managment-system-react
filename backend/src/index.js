@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import { authenticateToken } from './middleware/auth.js';
+import pool from './db/pool.js';
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -21,11 +22,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+(async () => {
+  try {
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image TEXT`);
+    await pool.query(`ALTER TABLE assets ALTER COLUMN image TYPE TEXT`);
+  } catch (e) {
+    console.warn('DB column setup warning:', e.message);
+  }
+})();
+
 app.use(compression());
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);

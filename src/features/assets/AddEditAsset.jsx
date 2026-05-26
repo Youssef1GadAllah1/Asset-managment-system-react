@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Input, Badge, Select } from '../../components/common'
 import { createAsset, updateAsset, getAssetById, getAssetAssignmentsByAsset, updateAssetAssignment, deleteAssetAssignment } from '../../utils/api'
 import { useAuth } from '../../context/AuthContext'
-import { Trash2, Edit2 } from 'lucide-react'
+import { Trash2, Edit2, ImagePlus, X } from 'lucide-react'
 
 export const AddEditAsset = () => {
   const navigate = useNavigate()
@@ -51,6 +51,8 @@ export const AddEditAsset = () => {
   const [assignments, setAssignments] = useState([])
   const [editingAssignment, setEditingAssignment] = useState(null)
   const [updatingAssignment, setUpdatingAssignment] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,6 +85,20 @@ export const AddEditAsset = () => {
     loadData()
   }, [id])
   const isEditMode = !!id
+
+  const handleImageChange = (file) => {
+    if (!file || !file.type.startsWith('image/')) return
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, image: 'Image must be under 5MB' }))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setFormData(prev => ({ ...prev, image: e.target.result }))
+      setErrors(prev => ({ ...prev, image: '' }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   const categories = ['Electronics', 'Photography', 'Mobile', 'Furniture', 'Accessories', 'Other']
   const statuses = [
@@ -271,6 +287,60 @@ export const AddEditAsset = () => {
                 value={formData.date}
                 onChange={handleChange}
               />
+            </div>
+
+            {/* Asset Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Asset Image
+              </label>
+              <div className="flex items-start gap-4">
+                {formData.image && formData.image.startsWith('data:') ? (
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={formData.image}
+                      alt="Asset preview"
+                      className="w-24 h-24 rounded-xl object-cover border-2 border-gray-200 dark:border-gray-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, image: '📦' }))}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-4xl flex-shrink-0 border-2 border-gray-200 dark:border-gray-600">
+                    {formData.image || '📦'}
+                  </div>
+                )}
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                  onDragLeave={(e) => { e.preventDefault(); setIsDragging(false) }}
+                  onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleImageChange(e.dataTransfer.files[0]) }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`flex-1 p-5 border-2 border-dashed rounded-xl text-center cursor-pointer transition-all ${
+                    isDragging
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <ImagePlus size={22} className="mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium text-primary-600 dark:text-primary-400">Click to upload</span> or drag & drop
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP up to 5MB</p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageChange(e.target.files[0])}
+                />
+              </div>
+              {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
             </div>
 
             {isEditMode && assignments.length > 0 && (

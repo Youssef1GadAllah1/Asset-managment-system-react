@@ -144,7 +144,11 @@ export const Assets = () => {
                 onClick={() => handleAssetClick(asset)}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-4xl">{asset.image}</span>
+                  {asset.image && asset.image.startsWith('data:') ? (
+                    <img src={asset.image} alt={asset.name} className="w-16 h-16 rounded-lg object-cover" />
+                  ) : (
+                    <span className="text-4xl">{asset.image || '📦'}</span>
+                  )}
                   <Badge variant={asset.status}>{asset.status}</Badge>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">{asset.name}</h3>
@@ -195,7 +199,11 @@ export const Assets = () => {
             <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
-                  <span className="text-5xl">{selectedAsset.image}</span>
+                  {selectedAsset.image && selectedAsset.image.startsWith('data:') ? (
+                    <img src={selectedAsset.image} alt={selectedAsset.name} className="w-20 h-20 rounded-xl object-cover" />
+                  ) : (
+                    <span className="text-5xl">{selectedAsset.image || '📦'}</span>
+                  )}
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedAsset.name}</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{selectedAsset.category} • {selectedAsset.type}</p>

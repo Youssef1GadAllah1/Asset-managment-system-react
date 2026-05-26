@@ -110,6 +110,13 @@ export async function changePassword(oldPassword, newPassword) {
   });
 }
 
+export async function uploadProfileImage(userId, base64Image) {
+  return apiCall(`/users/${userId}/profile-image`, {
+    method: 'PUT',
+    body: JSON.stringify({ profile_image: base64Image })
+  });
+}
+
 // ============ ASSETS ENDPOINTS ============
 export async function getAllAssets() {
   return apiCall('/assets');
