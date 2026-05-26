@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Badge } from '../../components/common'
 import { getAllAssets, deleteAsset, getAssetAssignmentsByAsset } from '../../utils/api'
-import { Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, X, ArrowLeft } from 'lucide-react'
 
 export const Assets = () => {
   const navigate = useNavigate()
@@ -201,7 +201,16 @@ export const Assets = () => {
                     <p className="text-sm text-gray-600 dark:text-gray-400">{selectedAsset.category} • {selectedAsset.type}</p>
                   </div>
                 </div>
-                <Badge variant={selectedAsset.status}>{selectedAsset.status}</Badge>
+                <div className="flex items-center gap-3">
+                  <Badge variant={selectedAsset.status}>{selectedAsset.status}</Badge>
+                  <button
+                    onClick={() => setShowAssetModal(false)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-200 active:scale-90"
+                    aria-label="Close"
+                  >
+                    <X size={22} />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4 mb-6">
