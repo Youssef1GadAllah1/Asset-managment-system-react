@@ -6,7 +6,7 @@ import { Layout } from '../../components/layout/Layout'
 import { Reveal } from '../../components/common/Reveal'
 import { useInView } from '../../hooks/useInView'
 import { useCountUp } from '../../hooks/useCountUp'
-import { getTasksByUser, getAllAssets, getAllEmployees, getAssetAssignmentsByUser, updateAsset, updateTask, createNotification } from '../../utils/api'
+import { getTasksByUser, getAllAssets, getAssetAssignmentsByUser, updateAsset, updateTask, createNotification, getDashboardStats } from '../../utils/api'
 import { BarChart3, Users, Package, CheckCircle, AlertCircle } from 'lucide-react'
 
 const StatCard = memo(({ icon: Icon, label, value, bgColor, borderColor }) => {
@@ -71,7 +71,7 @@ export const Dashboard = () => {
   const { t } = useTranslation()
   const [tasks, setTasks] = useState([])
   const [assets, setAssets] = useState([])
-  const [employees, setEmployees] = useState([])
+  const [stats, setStats] = useState(null)
   const [userAssignedAssets, setUserAssignedAssets] = useState([])
   const [selectedAsset, setSelectedAsset] = useState(null)
   const [showAssetModal, setShowAssetModal] = useState(false)
@@ -90,16 +90,16 @@ export const Dashboard = () => {
   const initializeDashboardData = async () => {
     try {
       setLoading(true)
-      const [tasksData, assetsData, employeesData, assignedAssetsData] = await Promise.all([
+      const [tasksData, assetsData, assignedAssetsData, statsData] = await Promise.all([
         getTasksByUser(user.id),
         getAllAssets(),
-        getAllEmployees(),
-        getAssetAssignmentsByUser(user.id)
+        getAssetAssignmentsByUser(user.id),
+        getDashboardStats(),
       ])
       setTasks(tasksData)
       setAssets(assetsData)
-      setEmployees(employeesData)
       setUserAssignedAssets(assignedAssetsData)
+      setStats(statsData)
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
     } finally {
@@ -200,10 +200,10 @@ export const Dashboard = () => {
 
         {user?.role !== 'user' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 stagger">
-            <StatCard icon={Users} label={t('dashboard.totalUsers')} value={employees.length} bgColor="bg-primary-600" borderColor="border-primary-600" />
-            <StatCard icon={Package} label={t('dashboard.totalAssets')} value={assets.length} bgColor="bg-accent-500" borderColor="border-accent-500" />
-            <StatCard icon={CheckCircle} label="Active Assets" value={assetStats.active} bgColor="bg-green-600" borderColor="border-green-600" />
-            <StatCard icon={AlertCircle} label="Maintenance" value={assetStats.maintenance} bgColor="bg-yellow-600" borderColor="border-yellow-600" />
+            <StatCard icon={Users} label={t('dashboard.totalUsers')} value={stats?.total_users ?? 0} bgColor="bg-primary-600" borderColor="border-primary-600" />
+            <StatCard icon={Package} label={t('dashboard.totalAssets')} value={stats?.total_assets ?? 0} bgColor="bg-accent-500" borderColor="border-accent-500" />
+            <StatCard icon={CheckCircle} label="Active Assets" value={stats?.active_assets ?? 0} bgColor="bg-green-600" borderColor="border-green-600" />
+            <StatCard icon={AlertCircle} label="Maintenance" value={stats?.maintenance_assets ?? 0} bgColor="bg-yellow-600" borderColor="border-yellow-600" />
           </div>
         )}
 

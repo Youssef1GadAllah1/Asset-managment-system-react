@@ -117,6 +117,10 @@ export async function uploadProfileImage(userId, base64Image) {
   });
 }
 
+export async function getDashboardStats() {
+  return apiCall('/stats');
+}
+
 // ============ ASSETS ENDPOINTS ============
 export async function getAllAssets() {
   return apiCall('/assets');

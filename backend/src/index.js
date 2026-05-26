@@ -16,6 +16,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import statsRoutes from './routes/statsRoutes.js';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/api/reports', authenticateToken, reportRoutes);
 app.use('/api/tasks', authenticateToken, taskRoutes);
 app.use('/api/notifications', authenticateToken, notificationRoutes);
 app.use('/api/chat', authenticateToken, chatRoutes);
+app.use('/api/stats', authenticateToken, statsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
