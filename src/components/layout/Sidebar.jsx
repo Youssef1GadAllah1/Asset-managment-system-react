@@ -119,9 +119,17 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
         <div className="mx-4 mt-4 mb-2 p-3 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100/60 dark:from-primary-900/30 dark:to-primary-800/20 border border-primary-100 dark:border-primary-800/40">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">
-              {initials}
-            </div>
+            {user?.profile_image ? (
+              <img
+                src={user.profile_image}
+                alt={user.name}
+                className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-md border-2 border-primary-200 dark:border-primary-700"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">
+                {initials}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate leading-tight">{user?.name}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>

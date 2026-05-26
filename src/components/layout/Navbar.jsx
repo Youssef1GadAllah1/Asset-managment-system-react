@@ -24,7 +24,11 @@ export const Navbar = ({ onMenuClick, searchTerm = '', onSearchChange }) => {
   const [showProfile, setShowProfile] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [scrolled, setScrolled] = useState(false)
-  const [profileImage] = useState(localStorage.getItem(`userProfileImage_${user?.id || user?.userName}`) || null)
+
+  const profileImage = user?.profile_image || null
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?'
 
   useEffect(() => {
     if (!user?.id) return
@@ -134,8 +138,8 @@ export const Navbar = ({ onMenuClick, searchTerm = '', onSearchChange }) => {
                     className="w-8 h-8 rounded-full object-cover border-2 border-primary-200 dark:border-primary-700"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-2 border-primary-200 dark:border-primary-700">
-                    <User size={16} className="text-primary-600" />
+                  <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center border-2 border-primary-200 dark:border-primary-700 text-white text-xs font-bold">
+                    {initials}
                   </div>
                 )}
                 <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-200 max-w-[120px] truncate">
