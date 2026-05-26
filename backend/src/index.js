@@ -23,12 +23,150 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Run database migrations on startup
 (async () => {
   try {
-    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image TEXT`);
-    await pool.query(`ALTER TABLE assets ALTER COLUMN image TYPE TEXT`);
+    console.log('[v0] Running database setup...');
+    
+    // Create tables
+    await pool.query('DROP TABLE IF EXISTS chat_messages CASCADE');
+    await pool.query('DROP TABLE IF EXISTS notifications CASCADE');
+    await pool.query('DROP TABLE IF EXISTS tasks CASCADE');
+    await pool.query('DROP TABLE IF EXISTS reports CASCADE');
+    await pool.query('DROP TABLE IF EXISTS products CASCADE');
+    await pool.query('DROP TABLE IF EXISTS asset_assignments CASCADE');
+    await pool.query('DROP TABLE IF EXISTS assets CASCADE');
+    await pool.query('DROP TABLE IF EXISTS employees CASCADE');
+    await pool.query('DROP TABLE IF EXISTS users CASCADE');
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        avatar VARCHAR(50),
+        department VARCHAR(100),
+        role VARCHAR(50) DEFAULT 'user',
+        profile_image TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS assets (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100),
+        type VARCHAR(100),
+        price DECIMAL(12, 2),
+        amount INTEGER DEFAULT 1,
+        date DATE,
+        location VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'available',
+        color VARCHAR(100),
+        image TEXT,
+        serial_number VARCHAR(255) UNIQUE NOT NULL,
+        assigned_to_id INTEGER REFERENCES users(id),
+        assigned_to_name VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS employees (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        department VARCHAR(100),
+        position VARCHAR(100),
+        hire_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS asset_assignments (
+        id SERIAL PRIMARY KEY,
+        asset_id INTEGER REFERENCES assets(id),
+        user_id INTEGER REFERENCES users(id),
+        assigned_by_id INTEGER REFERENCES users(id),
+        assigned_by_name VARCHAR(255),
+        assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        return_date TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(asset_id, user_id)
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(12, 2),
+        quantity INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        assigned_to_id INTEGER REFERENCES users(id),
+        status VARCHAR(50) DEFAULT 'pending',
+        priority VARCHAR(50),
+        due_date TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        generated_by_id INTEGER REFERENCES users(id),
+        report_type VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        type VARCHAR(50),
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log('[v0] Database setup completed successfully!');
   } catch (e) {
-    console.warn('DB column setup warning:', e.message);
+    console.warn('[v0] DB setup warning:', e.message);
   }
 })();
 
