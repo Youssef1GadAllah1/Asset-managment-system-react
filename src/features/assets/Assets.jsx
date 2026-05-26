@@ -4,8 +4,15 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card, Button, Badge } from '../../components/common'
-import { getAllAssets, deleteAsset, getAssetAssignmentsByAsset } from '../../utils/api'
-import { Plus, Search, Edit, Trash2, X, ArrowLeft } from 'lucide-react'
+import { getAllAssets, deleteAsset, getAssetAssignmentsByAsset, updateAsset } from '../../utils/api'
+import { Plus, Search, Edit, Trash2, X, RefreshCw, CheckCircle } from 'lucide-react'
+
+const STATUS_OPTIONS = [
+  { value: 'available',   label: 'Available',    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  { value: 'in_use',      label: 'In Use',       color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  { value: 'maintenance', label: 'Maintenance',   color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  { value: 'retired',     label: 'Retired',       color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+]
 
 export const Assets = () => {
   const navigate = useNavigate()
@@ -21,6 +28,12 @@ export const Assets = () => {
   const [loading, setLoading] = useState(true)
   const [assignments, setAssignments] = useState([])
   const [loadingAssignments, setLoadingAssignments] = useState(false)
+
+  // Status-only edit modal state
+  const [showStatusModal, setShowStatusModal] = useState(false)
+  const [statusAsset, setStatusAsset] = useState(null)
+  const [newStatus, setNewStatus] = useState('')
+  const [savingStatus, setSavingStatus] = useState(false)
 
   useEffect(() => {
     fetchAssets()
@@ -67,6 +80,31 @@ export const Assets = () => {
       console.error('Failed to delete asset:', error)
     }
   }, [deleteId])
+
+  const handleOpenStatusModal = useCallback((e, asset) => {
+    e.stopPropagation()
+    setStatusAsset(asset)
+    setNewStatus(asset.status)
+    setShowStatusModal(true)
+  }, [])
+
+  const handleSaveStatus = async () => {
+    if (!statusAsset || newStatus === statusAsset.status) {
+      setShowStatusModal(false)
+      return
+    }
+    try {
+      setSavingStatus(true)
+      await updateAsset(statusAsset.id, { ...statusAsset, status: newStatus })
+      setAssets(prev => prev.map(a => a.id === statusAsset.id ? { ...a, status: newStatus } : a))
+      setShowStatusModal(false)
+      setStatusAsset(null)
+    } catch (error) {
+      console.error('Failed to update status:', error)
+    } finally {
+      setSavingStatus(false)
+    }
+  }
 
   const filteredAssets = useMemo(() => {
     const lower = searchTerm.toLowerCase()
@@ -163,15 +201,26 @@ export const Assets = () => {
                 </div>
                 <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                   {(user?.role === 'admin' || user?.role === 'asset_manager') && (
-                    <Button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/assets/edit/${asset.id}`) }}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 flex items-center justify-center space-x-1"
-                    >
-                      <Edit size={16} />
-                      <span>{t('common.edit')}</span>
-                    </Button>
+                    <>
+                      <Button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/assets/edit/${asset.id}`) }}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center space-x-1"
+                      >
+                        <Edit size={16} />
+                        <span>{t('common.edit')}</span>
+                      </Button>
+                      <Button
+                        onClick={(e) => handleOpenStatusModal(e, asset)}
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center space-x-1"
+                      >
+                        <RefreshCw size={16} />
+                        <span>Status</span>
+                      </Button>
+                    </>
                   )}
                   {user?.role === 'admin' && (
                     <Button
@@ -194,6 +243,7 @@ export const Assets = () => {
           </Card>
         )}
 
+        {/* Asset Details Modal */}
         {showAssetModal && selectedAsset && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -269,6 +319,66 @@ export const Assets = () => {
           </div>
         )}
 
+        {/* Edit Status Modal */}
+        {showStatusModal && statusAsset && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-sm w-full">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Edit Status</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[200px]">{statusAsset.name}</p>
+                </div>
+                <button
+                  onClick={() => setShowStatusModal(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all active:scale-90"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-2 mb-6">
+                {STATUS_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setNewStatus(opt.value)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all duration-150 ${
+                      newStatus === opt.value
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <span className={`text-sm font-semibold px-2.5 py-1 rounded-full ${opt.color}`}>
+                      {opt.label}
+                    </span>
+                    {newStatus === opt.value && (
+                      <CheckCircle size={18} className="text-primary-600 dark:text-primary-400" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSaveStatus}
+                  disabled={savingStatus || newStatus === statusAsset.status}
+                  className="flex-1"
+                >
+                  {savingStatus ? 'Saving...' : 'Save Status'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowStatusModal(false)}
+                  className="flex-1"
+                  disabled={savingStatus}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Confirm Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-md w-full">
